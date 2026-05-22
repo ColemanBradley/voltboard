@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Voltboard</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Voltboard">
+<meta name="theme-color" content="#185FA5">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --bg:#f5f4f0;--surface:#fff;--surface2:#f0efe9;--surface3:#e8e7e0;
+  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.18);
+  --text:#1a1917;--text2:#6b6a65;--text3:#9e9d98;
+  --blue:#185FA5;--blue-bg:#dbeafe;--blue-text:#0c3d6e;
+  --green:#2d7a3a;--green-bg:#bbf7d0;--green-text:#1a4d23;
+  --amber:#a16207;--amber-bg:#fde68a;--amber-text:#713f00;
+  --gray-bg:#e5e5e5;--gray-text:#4b4b4b;
+  --red:#c0392b;--red-light:#fde8e6;--red-text:#7a1f16;
+  --weekend:#f8f7f3;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.1),0 2px 4px rgba(0,0,0,0.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px;}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;box-shadow:var(--shadow);z-index:20;}
+.tl{display:flex;align-items:center;gap:7px;flex:1;}
+.app-title{font-size:15px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;letter-spacing:-.02em;}
+.bolt-icon{background:var(--blue);color:#fff;width:25px;height:25px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.icon-btn{background:none;border:1px solid var(--border);border-radius:var(--radius);padding:5px 8px;cursor:pointer;color:var(--text2);font-size:13px;display:flex;align-items:center;transition:background .1s;}
+.icon-btn:hover{background:var(--surface2);}
+.tbtn{background:none;border:1px solid var(--border);border-radius:var(--radius);padding:5px 11px;cursor:pointer;color:var(--text2);font-size:12px;font-family:'DM Sans',sans-serif;}
+.tbtn:hover{background:var(--surface2);}
+.range{font-size:13px;font-weight:500;color:var(--text);min-width:140px;}
+.legend{display:flex;gap:8px;align-items:center;}
+.li{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text2);}
+.ld{width:9px;height:9px;border-radius:2px;}
+.ld.scheduled{background:var(--blue-bg);}.ld.complete{background:var(--green-bg);}.ld.followup{background:var(--amber-bg);}.ld.invoiced{background:var(--gray-bg);border:1px solid var(--border2);}
+.seg{display:flex;background:var(--surface2);border-radius:var(--radius);padding:3px;border:1px solid var(--border);gap:2px;}
+.seg-btn{padding:5px 13px;border-radius:6px;border:none;cursor:pointer;font-size:12px;background:none;color:var(--text2);font-family:'DM Sans',sans-serif;transition:all .12s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.seg-btn.active{background:var(--surface);color:var(--text);font-weight:500;box-shadow:var(--shadow);}
+.add-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;white-space:nowrap;}
+.add-btn:hover{background:#0c4a8a;}
+.body-root{display:flex;flex:1;min-height:0;position:relative;}
+
+/* ── MONTH VIEW ── */
+.month-view{flex:1;display:flex;flex-direction:column;min-height:0;}
+.mv-col-headers{display:grid;grid-template-columns:repeat(7,1fr);background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.mv-ch{padding:7px 0;text-align:center;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;border-right:1px solid var(--border);}
+.mv-ch:last-child{border-right:none;}
+.mv-inner{display:flex;flex:1;min-height:0;}
+.mv-scroll{flex:1;overflow-y:auto;min-height:0;}
+.mv-week-row{display:grid;grid-template-columns:repeat(7,1fr);position:relative;overflow:visible;}
+/* Fixed height month cells — no expansion */
+.mv-day-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);height:110px;padding:4px 4px 2px;display:flex;flex-direction:column;position:relative;}
+.mv-day-cell:nth-child(7n){border-right:none;}
+.mv-day-cell.other{background:var(--surface2);}
+.mv-day-cell.wknd{background:var(--weekend);}
+.mv-day-cell.other.wknd{background:#eeede8;}
+.mv-date{font-size:11px;font-weight:500;color:var(--text3);width:20px;text-align:center;flex-shrink:0;height:20px;display:flex;align-items:center;}
+.mv-date.today-dot{background:var(--blue);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;}
+/* Month chip — appears in the first cell of a new month */
+.mv-month-chip{display:inline-flex;align-items:center;font-size:9px;font-weight:600;color:var(--text2);background:var(--surface3);border-radius:3px;padding:1px 5px;margin-bottom:2px;letter-spacing:.03em;}
+/* Month tiles — absolute overlay layer, same approach as schedule mode */
+.mv-tile-layer{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:2;}
+.mv-tile{position:absolute;pointer-events:all;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:500;display:flex;align-items:center;gap:3px;overflow:hidden;white-space:nowrap;cursor:pointer;}
+.mv-tile:hover{filter:brightness(.93);}
+.mv-tile.tentative{background:#dbeafe;color:#0c3d6e;}
+.mv-tile.confirmed{background:#185FA5;color:#fff;}
+.mv-tile.complete{background:#bbf7d0;color:#1a4d23;}
+.mv-tile.followup{background:#fde68a;color:#713f00;}
+.mv-tile.past_followup{background:#fef9e7;color:#a16207;opacity:.7;}
+.mv-tile.invoiced{background:#e5e5e5;color:#4b4b4b;opacity:.7;}
+.mv-tile.cont-right{border-radius:4px 0 0 4px;}
+.mv-tile.cont-left{border-radius:0 4px 4px 0;}
+.mv-tile.cont-both{border-radius:0;}
+body.dragging-job .mv-tile-layer{pointer-events:none!important;z-index:0!important;}
+body.dragging-job .mv-tile{pointer-events:none!important;}
+
+/* ── WEEK VIEW ── */
+.week-view{flex:1;display:flex;flex-direction:column;min-height:0;}
+.wv-col-headers{display:grid;grid-template-columns:repeat(7,1fr);background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.wv-ch{padding:9px 0;text-align:center;border-right:1px solid var(--border);}
+.wv-ch:last-child{border-right:none;}
+.wv-ch.wknd{background:var(--weekend);}
+.dh-name{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;}
+.dh-num{font-size:19px;font-weight:500;color:var(--text);line-height:1.3;}
+.dh-num.today{background:var(--blue);color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:14px;}
+.wv-inner{display:flex;flex:1;min-height:0;}
+/* wv-scroll wraps wv-grid and provides the scrollable area */
+.wv-scroll{flex:1;overflow-y:auto;min-height:0;}
+.wv-grid{display:grid;grid-template-columns:repeat(7,1fr);}
+.wv-day-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);min-height:200px;padding:6px;display:flex;flex-direction:column;gap:5px;overflow:hidden;}
+.wv-day-cell:nth-child(7n){border-right:none;}
+.wv-day-cell.wknd{background:var(--weekend);}
+
+/* ── WEEK VIEW JOB CARD (expanded) ── */
+.wv-job-card{border-radius:6px;padding:7px 9px;font-size:11px;cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:filter .1s;position:relative;}
+.wv-job-card:hover{filter:brightness(.93);}
+.wv-job-card.tentative{background:var(--blue-bg);color:var(--blue-text);}
+.wv-job-card.confirmed{background:#185FA5;color:#fff;}
+.wv-job-card.complete{background:var(--green-bg);color:var(--green-text);}
+.wv-job-card.followup{background:var(--amber-bg);color:var(--amber-text);}
+.wv-job-card.past_followup{background:#fef9e7;color:#a16207;opacity:.7;}
+.wv-job-card.invoiced{background:var(--gray-bg);color:var(--gray-text);opacity:.75;}
+.wv-job-card.complete{border-left:3px solid #4ade80;}
+.wv-job-card.followup{border-left:3px solid #f59e0b;}
+.wv-job-card-title{font-weight:600;font-size:12px;display:flex;align-items:center;gap:5px;}
+.wv-job-card-row{font-size:10px;opacity:.8;display:flex;align-items:center;gap:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wv-job-card-desc{font-size:10px;opacity:.7;margin-top:1px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+/* continuation banner for multi-day jobs in week view */
+.wv-cont-banner{border-radius:6px;padding:4px 8px;font-size:10px;opacity:.6;font-style:italic;display:flex;align-items:center;gap:4px;}
+.wv-cont-banner.tentative,.wv-cont-banner.confirmed{background:var(--blue-bg);color:var(--blue-text);}
+.wv-cont-banner.complete{background:var(--green-bg);color:var(--green-text);}
+.wv-cont-banner.followup{background:var(--amber-bg);color:var(--amber-text);}
+.wv-cont-banner.invoiced{background:var(--gray-bg);color:var(--gray-text);}
+.wv-check{width:13px;height:13px;border-radius:3px;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.6;cursor:pointer;margin-left:auto;}
+.wv-check:hover{opacity:1;}
+.wv-check.done{background:currentColor;}
+.wv-check.done::after{content:'';display:block;width:6px;height:3.5px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg) translate(1px,-1px);}
+
+/* ── SCHEDULE MODE ── */
+.sched-view{flex:1;display:flex;min-height:0;position:relative;}
+.queue-col{width:162px;min-width:162px;background:var(--surface2);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.qh{padding:9px 11px 7px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ql{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:500;}
+.qbadge{background:var(--blue-bg);color:var(--blue-text);border-radius:20px;padding:2px 7px;font-size:11px;font-weight:600;}
+.q-jobs{padding:7px;display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1;}
+.q-jobs.drag-over{background:var(--blue-light);outline:2px dashed var(--blue);outline-offset:-4px;}
+.jcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;cursor:grab;user-select:none;box-shadow:var(--shadow);}
+.jcard:hover{box-shadow:var(--shadow-md);}
+.jcard:active{cursor:grabbing;}
+.jcard.dragging{opacity:.3;}
+.jcard.builder-priority{border-left:3px solid var(--green);}
+.jc-top{display:flex;align-items:center;gap:5px;margin-bottom:2px;}
+.jc-name{font-size:12px;font-weight:600;color:var(--text);}
+.jc-meta{font-size:10px;color:var(--text2);padding-left:19px;}
+.jtag{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:1px 5px;border-radius:8px;margin-top:3px;font-weight:500;}
+.jtag-bl{background:#dcf0e0;color:#1a4d23;}
+.jtag-ho{background:var(--blue-bg);color:var(--blue-text);}
+/* Schedule grid */
+.sched-main{flex:1;display:flex;flex-direction:column;min-height:0;}
+.sched-weeks-wrap{flex:1;overflow-y:auto;display:block;min-height:0;}
+.sw-col-headers{display:grid;grid-template-columns:repeat(7,1fr);background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.sw-col-hdr{padding:6px 0;text-align:center;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;border-right:1px solid var(--border);}
+.sw-col-hdr:last-child{border-right:none;}
+.month-divider{padding:5px 10px 3px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;background:var(--surface2);border-bottom:1px solid var(--border);border-top:1px solid var(--border);position:sticky;top:0;z-index:3;flex-shrink:0;}
+/* Week rows — fixed height, jobs use overlay layer for spanning */
+.sw-week-row{display:grid;grid-template-columns:repeat(7,1fr);position:relative;}
+.sw-day-cell{background:var(--surface);border-right:1px solid var(--border);border-bottom:1px solid var(--border);min-height:130px;padding:0;display:flex;flex-direction:column;overflow:visible;}
+.sw-day-cell:nth-child(7n){border-right:none;}
+.sw-day-cell.wknd{background:var(--weekend);}
+.sw-day-cell.drag-over{background:#eff6ff !important;}
+.sw-dh{padding:5px 7px 4px;background:inherit;flex-shrink:0;position:relative;z-index:1;}
+.sw-day-cell.other{background:var(--surface2);}
+.sw-day-cell.wknd.other{background:#eeede8;}
+.sw-dh-name{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+.sw-dh-date{font-size:15px;font-weight:600;color:var(--text);line-height:1.1;}
+.sw-dh-date.today{color:var(--blue);}
+.sw-day-body{display:none;} /* bodies not used — tiles go in overlay */
+/* Tile overlay layer for schedule mode */
+.sw-tile-layer{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:2;}
+.sw-tile-layer .sw-tile{position:absolute;pointer-events:all;}
+/* Schedule tile — compact stacked card */
+.sw-tile{border-radius:5px;padding:4px 7px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:filter .1s;position:relative;overflow:hidden;}
+.sw-tile:hover{filter:brightness(.93);}
+.sw-tile.tentative{background:var(--blue-bg);color:var(--blue-text);}
+.sw-tile.confirmed{background:#185FA5;color:#fff;}
+.sw-tile.complete{background:var(--green-bg);color:var(--green-text);}
+.sw-tile.followup{background:var(--amber-bg);color:var(--amber-text);}
+.sw-tile.past_followup{background:#fef9e7;color:#a16207;opacity:.7;}
+.sw-tile.invoiced{background:var(--gray-bg);color:var(--gray-text);opacity:.7;}
+.sw-tile.cont{opacity:.55;font-style:italic;font-size:10px;}
+.sw-tile-name{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+/* Resize handles */
+.tile-rh{position:absolute;top:0;bottom:0;width:9px;cursor:ew-resize;z-index:10;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s;}
+.sw-tile:hover .tile-rh{opacity:1;}
+.tile-rh::after{content:'';width:2px;height:10px;background:currentColor;opacity:.5;border-radius:1px;}
+.tile-rh.rh-left{left:0;}
+.tile-rh.rh-right{right:0;}
+
+/* ── COLLAPSIBLE QUEUE PANEL ── */
+.queue-panel{display:flex;flex-direction:column;background:var(--surface2);border-right:1px solid var(--border);flex-shrink:0;position:relative;transition:width .2s ease;}
+.queue-panel.open{width:168px;}
+.queue-panel.closed{width:32px;}
+.queue-strip{width:32px;display:flex;flex-direction:column;align-items:center;padding-top:10px;gap:8px;flex-shrink:0;}
+.queue-strip-badge{background:var(--blue-bg);color:var(--blue-text);border-radius:20px;padding:2px 6px;font-size:10px;font-weight:600;}
+.queue-strip:hover{background:var(--surface3);}
+.queue-inner{width:168px;display:flex;flex-direction:column;overflow:hidden;}
+.queue-panel.closed .queue-inner{display:none;}
+.queue-panel.closed .queue-strip{display:flex;}
+.queue-panel.open .queue-strip{display:none;}
+.qh{padding:9px 11px 7px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.qh:hover{background:var(--surface3);}
+.q-jobs{padding:7px;display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1;min-height:0;}
+.q-jobs.drag-over{background:#eff6ff;outline:2px dashed var(--blue);outline-offset:-4px;}
+/* ── PHONE — vertical week list ── */
+@media(max-width:500px){
+  .topbar{padding:6px 10px;gap:5px;}
+  .legend{display:none;}
+  .seg{display:none;}
+  .app-title{font-size:14px;}
+  .add-btn{padding:6px 10px;font-size:12px;}
+  .range{font-size:12px;min-width:80px;}
+  body{overflow:auto;}
+  .body-root{flex-direction:column;}
+  .queue-panel{display:none;}
+  .month-view{display:none!important;}
+  .week-view{display:flex!important;flex-direction:column;flex:1;}
+  .wv-col-headers{display:none;}
+  .wv-inner{flex:1;overflow:auto;}
+  .wv-scroll{overflow:visible;}
+  .wv-grid{display:flex!important;flex-direction:column;gap:0;}
+  .wv-day-col{display:flex;flex-direction:column;border-bottom:1px solid var(--border);}
+  .wv-dh{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .wv-dh-name{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;width:28px;}
+  .wv-dh-date{font-size:16px;font-weight:600;}
+  .wv-day-jobs{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:40px;}
+  .wv-job-card{border-radius:var(--radius);padding:8px 10px;font-size:12px;}
+  .sidebar{width:100%!important;border-left:none;border-top:1px solid var(--border);}
+}
+/* ── IPAD portrait ── */
+@media(min-width:501px)and(max-width:820px){
+  .legend{gap:5px;}
+  .li{font-size:9px;}
+  .ld{width:7px;height:7px;}
+  .range{min-width:100px;font-size:12px;}
+  .add-btn{font-size:11px;padding:5px 10px;}
+  .mv-ch{font-size:9px;padding:4px 0;}
+  .mv-day-cell{padding:3px;}
+  .mv-date{font-size:10px;height:18px;}
+  .mv-tile{font-size:9px;height:16px;padding:1px 4px;}
+}
+.sidebar{width:272px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;min-height:0;box-shadow:-3px 0 10px rgba(0,0,0,0.06);animation:slideIn .16s ease;}
+@keyframes slideIn{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
+.sb-hdr{padding:11px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.sb-title{font-size:13px;font-weight:600;color:var(--text);flex:1;margin-right:8px;}
+.sb-close{background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;display:flex;align-items:center;padding:3px;border-radius:4px;}
+.sb-close:hover{background:var(--surface2);color:var(--text);}
+.sb-body{padding:13px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:11px;}
+.sbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.sbadge.tentative,.sbadge.confirmed{background:var(--blue-bg);color:var(--blue-text);}
+.sbadge.complete{background:var(--green-bg);color:var(--green-text);}
+.sbadge.followup{background:var(--amber-bg);color:var(--amber-text);}
+.sbadge.past_followup{background:#fef9e7;color:#a16207;opacity:.8;}
+.sbadge.invoiced{background:var(--gray-bg);color:var(--gray-text);}
+.sdl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:500;}
+.sdv{font-size:12px;color:var(--text);line-height:1.5;}
+.sdv.phone{color:var(--blue);font-family:'DM Mono',monospace;font-size:11px;}
+.sdv.addr{color:var(--text2);font-style:italic;}
+.divider{height:1px;background:var(--border);flex-shrink:0;}
+.checklist{display:flex;flex-direction:column;gap:5px;}
+.ci{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text);line-height:1.4;cursor:pointer;}
+.notes-box{background:var(--surface2);border-radius:var(--radius);padding:9px;font-size:11px;color:var(--text2);line-height:1.6;border:1px solid var(--border);}
+.arow{display:flex;gap:5px;}
+.ab{flex:1;padding:6px 0;border-radius:var(--radius);border:1px solid var(--border);background:none;cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text2);display:flex;align-items:center;justify-content:center;gap:4px;font-weight:500;transition:background .1s;}
+.ab:hover{background:var(--surface2);}
+.ab.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+.ab.primary:hover{background:#0c4a8a;}
+.ab.green{background:var(--green-bg);color:var(--green-text);border-color:#86efac;}
+.ab.green:hover{background:#a7f3d0;}
+.ab.qbo{background:#2ca01c;color:#fff;border-color:#2ca01c;font-weight:600;}
+.ab.qbo:hover{background:#1e7a14;}
+.ab.danger{color:var(--red);}
+.ab.danger:hover{background:var(--red-light);}
+.status-selector{display:flex;flex-direction:column;gap:3px;}
+.status-opt{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer;font-size:11px;font-weight:500;background:none;font-family:'DM Sans',sans-serif;width:100%;transition:all .1s;}
+.status-opt:hover{background:var(--surface2);}
+.status-opt.sel-tentative,.status-opt.sel-confirmed{border-color:#93c5fd;background:#eff6ff;color:var(--blue-text);}
+.sdot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.sdot.tentative,.sdot.confirmed{background:var(--blue-bg);}
+.followup-prompt{display:flex;flex-direction:column;gap:8px;padding:10px 11px;background:#fffbeb;border:1px solid #fcd34d;border-radius:var(--radius);}
+.followup-prompt-title{font-size:12px;font-weight:600;color:var(--amber-text);display:flex;align-items:center;gap:6px;}
+.followup-btns{display:flex;gap:5px;}
+.fp-yes{flex:1;padding:6px 0;border:none;border-radius:var(--radius);background:var(--amber-bg);color:var(--amber-text);cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;font-weight:600;}
+.fp-yes:hover{background:#fbbf24;}
+.fp-no{flex:1;padding:6px 0;border:1px solid var(--border);border-radius:var(--radius);background:none;color:var(--text2);cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;}
+.fp-no:hover{background:var(--surface2);}
+.chain-item{display:flex;align-items:stretch;gap:0;}
+.chain-line{display:flex;flex-direction:column;align-items:center;width:22px;flex-shrink:0;}
+.chain-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--border2);background:var(--surface);flex-shrink:0;margin-top:10px;}
+.chain-dot.done{background:var(--green);border-color:var(--green);}
+.chain-dot.current{background:var(--blue);border-color:var(--blue);}
+.chain-dot.pending{background:var(--amber-bg);border-color:var(--amber);}
+.chain-connector{width:2px;background:var(--border2);flex:1;min-height:6px;}
+.chain-card{flex:1;padding:6px 9px;border-radius:var(--radius);border:1px solid var(--border);margin:3px 0;cursor:pointer;font-size:11px;}
+.chain-card:hover{background:var(--surface2);}
+.chain-card.current{border-color:#93c5fd;background:#eff6ff;}
+.chain-card.done{opacity:.7;}
+.chain-card.pending{border-color:#fcd34d;background:#fffbeb;}
+.chain-name{font-weight:500;color:var(--text);}
+.chain-meta{font-size:10px;color:var(--text3);margin-top:1px;}
+.qbo-note{display:flex;align-items:flex-start;gap:7px;padding:8px 10px;background:#f0fdf4;border:1px solid #86efac;border-radius:var(--radius);font-size:11px;color:#166534;line-height:1.5;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;z-index:300;}
+.modal{background:var(--surface);border-radius:var(--radius-lg);padding:20px;width:390px;box-shadow:var(--shadow-md);animation:popIn .14s ease;max-height:90vh;overflow-y:auto;}
+@keyframes popIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:15px;display:flex;align-items:center;justify-content:space-between;}
+.form-row{display:flex;flex-direction:column;gap:3px;margin-bottom:11px;}
+.form-label{font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;}
+.form-input{padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none;transition:border-color .1s;}
+.form-input:focus{border-color:var(--blue);}
+.form-select{padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none;cursor:pointer;}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px;}
+.modal-actions{display:flex;gap:7px;margin-top:5px;}
+.modal-cancel{flex:1;padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:none;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text2);}
+.modal-cancel:hover{background:var(--surface2);}
+.modal-save{flex:2;padding:8px;border:none;border-radius:var(--radius);background:var(--blue);color:#fff;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:600;}
+.modal-save:hover{background:#0c4a8a;}
+.addr-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:var(--blue);background:none;border:none;font-family:'DM Sans',sans-serif;padding:0;margin-bottom:11px;}
+.addr-toggle:hover{text-decoration:underline;}
+.addr-section{display:none;flex-direction:column;gap:11px;margin-bottom:11px;}
+.addr-section.open{display:flex;}
+
+/* SETTINGS */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:400;display:flex;align-items:flex-start;justify-content:flex-end;}
+.settings-panel{width:340px;height:100%;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;box-shadow:var(--shadow-md);animation:settingsIn .18s ease;}
+@keyframes settingsIn{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
+.sp-hdr{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.sp-title{font-size:14px;font-weight:600;color:var(--text);}
+.sp-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:20px;}
+.sp-section{display:flex;flex-direction:column;gap:8px;}
+.sp-section-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;}
+.type-list{display:flex;flex-direction:column;gap:5px;}
+.type-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border);}
+.type-icon-box{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.type-name{flex:1;font-size:12px;font-weight:500;color:var(--text);}
+.type-del{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:3px;border-radius:4px;}
+.type-del:hover{color:var(--red);background:var(--red-light);}
+.add-type-row{display:flex;gap:6px;}
+.add-type-input{flex:1;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none;}
+.add-type-input:focus{border-color:var(--blue);}
+.add-type-btn{padding:7px 12px;border:none;border-radius:var(--radius);background:var(--blue);color:#fff;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tl">
+    <div class="app-title"><div class="bolt-icon"><i class="ti ti-bolt"></i></div>Voltboard</div>
+    <div style="display:flex;gap:2px">
+      <button class="icon-btn" onclick="shiftPeriod(-1)"><i class="ti ti-chevron-left"></i></button>
+      <button class="icon-btn" onclick="shiftPeriod(1)"><i class="ti ti-chevron-right"></i></button>
+    </div>
+    <button class="tbtn" onclick="goToday()">Today</button>
+    <span class="range" id="range-label"></span>
+  </div>
+  <div class="legend">
+    <span id="sync-indicator" style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:3px;margin-right:4px"></span>
+    <div class="li"><div class="ld scheduled"></div>Scheduled</div>
+    <div class="li"><div class="ld complete"></div>Complete / Bill</div>
+    <div class="li"><div class="ld followup"></div>Follow-up needed</div>
+    <div class="li"><div class="ld invoiced"></div>Invoiced</div>
+  </div>
+  <div class="seg">
+    <button class="seg-btn active" id="btn-cal" onclick="clickCalBtn()"><i class="ti ti-calendar-month"></i><span id="cal-btn-label">Month</span></button>
+  </div>
+  <button class="add-btn" onclick="openAddModal(null)"><i class="ti ti-plus"></i>Add job</button>
+  <button class="icon-btn" onclick="openSettings()" title="Settings"><i class="ti ti-menu-2"></i></button>
+</div>
+
+<div class="body-root">
+
+  <!-- COLLAPSIBLE QUEUE PANEL — click strip or header to open/close -->
+  <div class="queue-panel closed" id="queue-panel">
+    <!-- Collapsed strip — click to open -->
+    <div class="queue-strip" onclick="toggleQueue()" style="cursor:pointer;" title="Open unscheduled jobs">
+      <i class="ti ti-briefcase" style="font-size:14px;color:var(--text3)"></i>
+      <span class="queue-strip-badge" id="q-count-strip">0</span>
+    </div>
+    <!-- Expanded inner -->
+    <div class="queue-inner">
+      <!-- Header — click to close -->
+      <div class="qh" onclick="toggleQueue()" style="cursor:pointer;">
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;font-weight:500">Unscheduled</span>
+        <span style="background:var(--blue-bg);color:var(--blue-text);border-radius:20px;padding:2px 7px;font-size:11px;font-weight:600" id="q-count">0</span>
+      </div>
+      <div class="q-jobs" id="queue"></div>
+    </div>
+  </div>
+
+  <!-- MONTH VIEW -->
+  <div class="month-view" id="month-view" style="flex:1;min-width:0;">
+    <div class="mv-col-headers">
+      <div class="mv-ch">Sun</div><div class="mv-ch">Mon</div><div class="mv-ch">Tue</div>
+      <div class="mv-ch">Wed</div><div class="mv-ch">Thu</div><div class="mv-ch">Fri</div><div class="mv-ch">Sat</div>
+    </div>
+    <div class="mv-inner">
+      <div class="mv-scroll" id="mv-scroll"></div>
+      <div class="sidebar" id="month-sb" style="display:none">
+        <div class="sb-hdr"><span class="sb-title" id="msb-title"></span><button class="sb-close" onclick="closeSB('month-sb')"><i class="ti ti-x"></i></button></div>
+        <div class="sb-body" id="msb-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK VIEW -->
+  <div class="week-view" id="week-view" style="display:none;flex:1;min-width:0;">
+    <div class="wv-col-headers" id="wv-col-headers"></div>
+    <div class="wv-inner">
+      <div class="wv-scroll"><div class="wv-grid" id="wv-grid"></div></div>
+      <div class="sidebar" id="week-sb" style="display:none">
+        <div class="sb-hdr"><span class="sb-title" id="wsb-title"></span><button class="sb-close" onclick="closeSB('week-sb')"><i class="ti ti-x"></i></button></div>
+        <div class="sb-body" id="wsb-body"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="add-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-title"><span id="modal-heading">Add new job</span><button class="sb-close" onclick="closeAddModal()"><i class="ti ti-x"></i></button></div>
+    <div class="form-row"><label class="form-label">Customer name</label><input class="form-input" id="f-name" placeholder="e.g. Smith Residence"/></div>
+    <div class="form-row"><label class="form-label">Phone number</label><input class="form-input" id="f-phone" placeholder="(000) 000-0000"/></div>
+    <button class="addr-toggle" onclick="toggleAddr()" id="addr-toggle-btn"><i class="ti ti-chevron-right" id="addr-chevron" style="font-size:11px;transition:transform .15s"></i> Add address</button>
+    <div class="addr-section" id="addr-section">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">Street address</label><input class="form-input" id="f-addr1" placeholder="123 Main St"/></div>
+      <div class="form-row-2" style="margin-bottom:0">
+        <div class="form-row" style="margin-bottom:0"><label class="form-label">City</label><input class="form-input" id="f-city" placeholder="Monroe"/></div>
+        <div class="form-row" style="margin-bottom:0"><label class="form-label">State / Zip</label><input class="form-input" id="f-zip" placeholder="GA 30655"/></div>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">Job type</label><select class="form-select" id="f-type"></select></div>
+      <div class="form-row" style="margin-bottom:0"><label class="form-label">Customer type</label><select class="form-select" id="f-cust"></select></div>
+    </div>
+    <div class="form-row" style="margin-top:11px"><label class="form-label">Checklist items (one per line)</label><textarea class="form-input" id="f-checklist" rows="3" placeholder="All fixtures on hand&#10;Hardware unopened&#10;Access confirmed" style="resize:vertical;line-height:1.6"></textarea></div>
+    <div class="form-row" style="margin-bottom:4px"><label class="form-label">Description</label><textarea class="form-input" id="f-notes" rows="2" placeholder="Job details, access info, materials…" style="resize:vertical;line-height:1.5"></textarea></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="modal-save" id="modal-save-btn" onclick="saveJob()">Add to unscheduled</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div class="settings-overlay" id="settings-overlay" style="display:none" onclick="closeSettingsBg(event)">
+  <div class="settings-panel">
+    <div class="sp-hdr"><span class="sp-title"><i class="ti ti-settings" style="margin-right:6px"></i>Settings</span><button class="sb-close" onclick="closeSettings()"><i class="ti ti-x"></i></button></div>
+    <div class="sp-body">
+      <div class="sp-section">
+        <div class="sp-section-title">Job types</div>
+        <div class="type-list" id="job-type-list"></div>
+        <div class="add-type-row"><input class="add-type-input" id="new-job-type" placeholder="New job type…" onkeydown="if(event.key==='Enter')addJobType()"/><button class="add-type-btn" onclick="addJobType()">Add</button></div>
+      </div>
+      <div class="sp-section">
+        <div class="sp-section-title">Customer types</div>
+        <div class="type-list" id="cust-type-list"></div>
+        <div class="add-type-row"><input class="add-type-input" id="new-cust-type" placeholder="New customer type…" onkeydown="if(event.key==='Enter')addCustType()"/><button class="add-type-btn" onclick="addCustType()">Add</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_S=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const STATUS_LABELS={tentative:'Tentative',confirmed:'Confirmed',complete:'Complete / Ready to bill',followup:'Follow-up needed',invoiced:'Invoiced'};
+
+let jobTypes=[
+  {id:'service',      label:'Service Work',            icon:'ti-tool',       color:'#7c3aed',iconBg:'#ede9fe'},
+  {id:'nc_rough',     label:'New Construction - Rough', icon:'ti-hammer',    color:'#2d7a3a',iconBg:'#dcf0e0'},
+  {id:'nc_trim',      label:'New Construction - Trim',  icon:'ti-bulb',      color:'#b45309',iconBg:'#fef3c7'},
+  {id:'remodel_rough',label:'Remodel - Rough',          icon:'ti-hammer',    color:'#185FA5',iconBg:'#dbeafe'},
+  {id:'remodel_trim', label:'Remodel - Trim',           icon:'ti-bulb',      color:'#c0392b',iconBg:'#fde8e6'},
+];
+let custTypes=[
+  {id:'ho',label:'Homeowner',icon:'ti-home',    color:'#185FA5',iconBg:'#dbeafe'},
+  {id:'bl',label:'Builder',  icon:'ti-building',color:'#2d7a3a',iconBg:'#dcf0e0'},
+];
+const ICON_POOL=['ti-bolt','ti-plug','ti-cpu','ti-tool','ti-flame','ti-droplet','ti-wifi','ti-settings','ti-circuit-board','ti-antenna','ti-ladder'];
+const COLOR_POOL=['#185FA5','#2d7a3a','#92400e','#7c3aed','#0891b2','#c0392b','#b45309'];
+let iconIdx=0,colorIdx=0;
+function nextIcon(){return ICON_POOL[iconIdx++%ICON_POOL.length];}
+function nextColor(){return COLOR_POOL[colorIdx++%COLOR_POOL.length];}
+function getJobType(id){return jobTypes.find(t=>t.id===id)||jobTypes[0];}
+function getCustType(id){return custTypes.find(t=>t.id===id)||custTypes[0];}
+
+// ── DATE UTILS ──
+function today(){const d=new Date();d.setHours(0,0,0,0);return d;}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+function isWeekend(d){return d.getDay()===0||d.getDay()===6;}
+function addWorkDays(d,n){
+  let r=new Date(d),added=1;
+  while(isWeekend(r))r=addDays(r,1);
+  while(added<n){r=addDays(r,1);if(!isWeekend(r))added++;}
+  return r;
+}
+function jobSpanDays(startDate,workDays){
+  if(!startDate)return[];
+  const end=addWorkDays(startDate,workDays);
+  const days=[];let d=new Date(startDate);
+  while(d<=end){days.push(new Date(d));d=addDays(d,1);}
+  return days;
+}
+function weekSunday(d){const r=new Date(d);r.setDate(r.getDate()-r.getDay());r.setHours(0,0,0,0);return r;}
+function weekDays(sun){return Array.from({length:7},(_,i)=>addDays(sun,i));}
+function fmtDate(d){if(!d)return'—';return`${DOW[d.getDay()]} ${MONTHS_S[d.getMonth()]} ${d.getDate()}`;}
+function dateToInput(d){if(!d)return'';const m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return`${d.getFullYear()}-${m}-${dd}`;}
+function inputToDate(s){if(!s)return null;const[y,m,d]=s.split('-').map(Number);const r=new Date(y,m-1,d);r.setHours(0,0,0,0);return r;}
+
+// ── STATE ──
+let currentView='month',monthOffset=0,weekOffset=0;
+function currentMonthStart(){const d=today();d.setDate(1);d.setMonth(d.getMonth()+monthOffset);return d;}
+function currentWeekSunday(){return addDays(weekSunday(today()),weekOffset*7);}
+
+// ── JOB DATA ──
+let jobs={};
+let unscheduled=[];
+let dragCard=null;
+let openSidebarId=null,openSidebarView=null,editingJobId=null;
+let pendingReturnParentId=null,pendingReturnView=null;
+
+// ── RANGE LABEL ──
+function updateRange(){
+  if(currentView==='month'){
+    // Range label updated by scroll observer — set initial value
+    const d=today();document.getElementById('range-label').textContent=`${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  } else if(currentView==='week'){
+    const sun=currentWeekSunday();const sat=addDays(sun,6);
+    document.getElementById('range-label').textContent=sun.getMonth()===sat.getMonth()?`${MONTHS_S[sun.getMonth()]} ${sun.getDate()} – ${sat.getDate()}, ${sun.getFullYear()}`:`${MONTHS_S[sun.getMonth()]} ${sun.getDate()} – ${MONTHS_S[sat.getMonth()]} ${sat.getDate()}, ${sun.getFullYear()}`;
+  } else {
+    const sun=currentWeekSunday();const end=addDays(sun,27);
+    document.getElementById('range-label').textContent=`${MONTHS_S[sun.getMonth()]} ${sun.getDate()} – ${MONTHS_S[end.getMonth()]} ${end.getDate()}`;
+  }
+}
+function shiftPeriod(dir){
+  if(currentView==='month'){
+    // Scroll to prev/next month rather than rebuilding
+    const cur=_visibleMonth();
+    const d=new Date(cur.year,cur.month+dir,1);
+    scrollToMonth(d.getFullYear(),d.getMonth());
+  } else if(currentView==='week'){weekOffset+=dir;buildWeekView();}
+  else{weekOffset+=dir;buildQueue();}
+  if(currentView!=='month')updateRange();
+}
+function goToday(){
+  weekOffset=0;
+  if(currentView==='month')scrollToMonth(today().getFullYear(),today().getMonth());
+  else if(currentView==='week')buildWeekView();
+  else buildQueue();
+  if(currentView!=='month')updateRange();
+}
+
+function _visibleMonth(){
+  const scroll=document.getElementById('mv-scroll');
+  if(!scroll)return{year:today().getFullYear(),month:today().getMonth()};
+  // Find which month contains the first visible row
+  // by checking which cell with date=1 is closest to the top of the scroll area
+  const cells=scroll.querySelectorAll('.mv-day-cell');
+  const scrollTop=scroll.scrollTop;
+  let bestMonth=null,bestDist=Infinity;
+  for(const cell of cells){
+    const ds=cell.dataset.date;if(!ds)continue;
+    const[cy,cm,cd]=ds.split('-').map(Number);
+    if(cd!==1)continue;
+    const row=cell.closest('.mv-week-row');
+    if(!row)continue;
+    const dist=Math.abs(row.offsetTop-scroll.offsetTop-scrollTop);
+    if(dist<bestDist){bestDist=dist;bestMonth={year:cy,month:cm-1};}
+  }
+  return bestMonth||{year:today().getFullYear(),month:today().getMonth()};
+}
+
+function scrollToMonth(yr,mo){
+  const scroll=document.getElementById('mv-scroll');
+  if(!scroll)return;
+  const cells=scroll.querySelectorAll('.mv-day-cell');
+  for(const cell of cells){
+    const ds=cell.dataset.date;if(!ds)continue;
+    const[cy,cm,cd]=ds.split('-').map(Number);
+    if(cd===1&&cm-1===mo&&cy===yr){
+      const row=cell.closest('.mv-week-row');
+      if(row)scroll.scrollTop=row.offsetTop-scroll.offsetTop;
+      return;
+    }
+  }
+}
+
+// ── VIEW TOGGLE ──
+// ── QUEUE PANEL ──
+let queueOpen=false;
+function toggleQueue(){
+  queueOpen=!queueOpen;
+  document.getElementById('queue-panel').className='queue-panel '+(queueOpen?'open':'closed');
+  if(queueOpen)buildQueue();
+}
+function buildQueue(){
+  updateQueueCount();
+  if(!queueOpen)return;
+  const queue=document.getElementById('queue');
+  if(!queue)return;
+  queue.innerHTML='';
+  const sorted=[...unscheduled].sort((a,b)=>(getCustType(b.cust).id==='bl'?1:0)-(getCustType(a.cust).id==='bl'?1:0));
+  sorted.forEach(u=>{
+    const jt=getJobType(u.typeKey);const ct=getCustType(u.cust);const isB=ct.id==='bl';
+    const card=document.createElement('div');card.className='jcard'+(isB?' builder-priority':'');card.draggable=true;
+    Object.assign(card.dataset,{id:u.id,type:u.typeKey,label:u.label,cust:u.cust});
+    card.innerHTML=`<div class="jc-top"><i class="ti ${jt.icon}" style="font-size:13px;color:${jt.color}"></i><span class="jc-name">${u.label}</span></div><div class="jc-meta">${jt.label}</div><div><span class="jtag jtag-${ct.id}"><i class="ti ${ct.icon}" style="font-size:10px"></i>${ct.label}</span></div>`;
+    card.addEventListener('dragstart',e=>{dragCard=card;card.classList.add('dragging');e.dataTransfer.effectAllowed='move';document.body.classList.add('dragging-job');});
+    card.addEventListener('dragend',()=>{card.classList.remove('dragging');document.body.classList.remove('dragging-job');});
+    card.addEventListener('dblclick',()=>openAddModal(u.id));
+    queue.appendChild(card);
+  });
+  // Queue drop zone (drag back to unscheduled)
+  queue.addEventListener('dragover',e=>{e.preventDefault();queue.classList.add('drag-over');});
+  queue.addEventListener('dragleave',()=>queue.classList.remove('drag-over'));
+  queue.addEventListener('drop',e=>{
+    e.preventDefault();queue.classList.remove('drag-over');
+    if(!dragCard||!dragCard.dataset.id)return;
+    unscheduleJob(dragCard.dataset.id);dragCard=null;
+  });
+}
+
+function clickCalBtn(){if(currentView==='month')setView('week');else setView('month');}
+function setView(v){
+  currentView=v;
+  document.getElementById('month-view').style.display=v==='month'?'flex':'none';
+  document.getElementById('week-view').style.display=v==='week'?'flex':'none';
+  document.getElementById('btn-cal').classList.toggle('active',true);
+  document.getElementById('cal-btn-label').textContent=v==='week'?'Week':'Month';
+  updateRange();
+  if(v==='month'){
+    if(monthViewDirty||!document.getElementById('mv-scroll').children.length){
+      buildMonthView();monthViewDirty=false;
+    }
+    setTimeout(()=>scrollToMonth(today().getFullYear(),today().getMonth()),50);
+  } else if(v==='week')buildWeekView();
+  buildQueue();
+}
+
+// ── MONTH VIEW — continuous scroll, 2 yrs back + 2 yrs forward ──
+function buildMonthView(){
+  const scroll=document.getElementById('mv-scroll');
+  scroll.innerHTML='';
+  const t=today();
+  const startYear=t.getFullYear()-2, startMonth=t.getMonth();
+  const endYear=t.getFullYear()+2,   endMonth=t.getMonth();
+  const globalSlotMap={};
+  const renderedWeeks=new Set(); // track week-Sunday timestamps to avoid duplicates
+  let cy=startYear,cm=startMonth;
+  while(cy<endYear||(cy===endYear&&cm<=endMonth)){
+    _appendMonth(scroll,cy,cm,globalSlotMap,renderedWeeks);
+    cm++;if(cm>11){cm=0;cy++;}
+  }
+  scroll.addEventListener('scroll',()=>{
+    const vm=_visibleMonth();
+    document.getElementById('range-label').textContent=`${MONTHS[vm.month]} ${vm.year}`;
+  },{passive:true});
+  // After layout completes, scroll to today
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      const t2=today();
+      scrollToMonth(t2.getFullYear(),t2.getMonth());
+    });
+  });
+}
+
+function _appendMonth(scroll,year,month,slotMap,renderedWeeks){
+  const anchor=document.createElement('div');
+  anchor.id=`mv-banner-${year}-${month}`;
+  anchor.dataset.year=year;anchor.dataset.month=month;
+  anchor.style.height='0';
+  scroll.appendChild(anchor);
+
+  const startSun=weekSunday(new Date(year,month,1));
+  const endSat=addDays(weekSunday(new Date(year,month+1,0)),6);
+  let cur=new Date(startSun);
+  while(cur<=endSat){
+    const weekKey=cur.getTime();
+    if(renderedWeeks.has(weekKey)){cur=addDays(cur,7);continue;}
+    renderedWeeks.add(weekKey);
+
+    const rowDates=Array.from({length:7},(_,i)=>addDays(cur,i));
+    const rowEl=document.createElement('div');rowEl.className='mv-week-row';
+    // Find any day that is the 1st of a month in this row (for the month chip)
+    const firstIdx=rowDates.findIndex(d=>d.getDate()===1);
+
+    rowDates.forEach((d,ci)=>{
+      const isRowMonth=d.getMonth()===month&&d.getFullYear()===year;
+      const cell=document.createElement('div');
+      cell.className='mv-day-cell'+(isRowMonth?'':' other')+(isWeekend(d)?' wknd':'');
+      cell.dataset.date=dateToInput(d);
+      if(ci===firstIdx){
+        const chip=document.createElement('div');chip.className='mv-month-chip';
+        chip.textContent=MONTHS[d.getMonth()];cell.appendChild(chip);
+      }
+      const dd=document.createElement('div');dd.className='mv-date'+(sameDay(d,today())?' today-dot':'');
+      dd.textContent=d.getDate();
+      cell.appendChild(dd);
+      // Drop zone — accepts unscheduled jobs AND placed tiles being moved
+      cell.addEventListener('dragover',e=>{e.preventDefault();cell.style.background='#eff6ff';});
+      cell.addEventListener('dragleave',()=>cell.style.background='');
+      cell.addEventListener('drop',e=>{
+        e.preventDefault();cell.style.background='';
+        if(!dragCard)return;
+        const dropDate=new Date(d);
+        const jid=dragCard.dataset.id;
+        if(dragCard.dataset.placed){
+          // Move placed job to new date
+          jobs[jid].startDate=dropDate;
+          jobs[jid].placedAt=Date.now();
+        } else {
+          // Place unscheduled job
+          const trimTypes=['remodel_trim','nc_trim'];
+          const cl=trimTypes.includes(dragCard.dataset.type)
+            ?[{ok:null,t:'All fixtures on site'},{ok:null,t:'Hardware unopened'},{ok:null,t:'Confirm access'}]
+            :[{ok:null,t:'Confirm with customer'},{ok:null,t:'Materials ready'}];
+          Object.assign(jobs[jid],{startDate:dropDate,placedAt:Date.now(),status:'confirmed'});
+          unscheduled=unscheduled.filter(u=>u.id!==jid);
+        }
+        dragCard=null;
+        rebuildAll();buildQueue();
+      });
+      rowEl.appendChild(cell);
+    });
+    renderMonthSpanTiles(rowEl,rowDates,slotMap,year,month);
+    scroll.appendChild(rowEl);
+    cur=addDays(cur,7);
+  }
+}
+const MV_TILE_H=18,MV_TILE_GAP=2,MV_TILE_TOP=24;
+function renderMonthSpanTiles(rowEl,rowDates,slotMap,renderYear,renderMonth){
+  const rowStart=rowDates[0],rowEnd=rowDates[6];
+
+  const jobsInRow=[];
+  Object.entries(jobs).forEach(([id,job])=>{
+    if(!job.startDate)return;
+    const sp=jobSpanDays(job.startDate,job.workDays);
+    if(sp.some(d=>d>=rowStart&&d<=rowEnd))jobsInRow.push({id,job,sp});
+  });
+  if(!jobsInRow.length)return;
+
+  // Sort by startDate then placedAt then id — same as schedule mode
+  jobsInRow.sort((a,b)=>{
+    if(a.job.startDate<b.job.startDate)return -1;
+    if(a.job.startDate>b.job.startDate)return 1;
+    return (a.job.placedAt||0)-(b.job.placedAt||0);
+  });
+
+  const layer=document.createElement('div');
+  layer.className='mv-tile-layer';
+
+  jobsInRow.forEach(({id,job,sp})=>{
+    const clipped=sp.filter(d=>d>=rowStart&&d<=rowEnd);
+    if(!clipped.length)return;
+    const first=clipped[0],last=clipped[clipped.length-1];
+    const cs=rowDates.findIndex(d=>sameDay(d,first));
+    const ce=rowDates.findIndex(d=>sameDay(d,last));
+    if(cs<0||ce<0)return;
+
+    // posInDay: same overlap logic as schedule mode
+    const posInDay=jobsInRow.filter(({id:oid,job:oj})=>{
+      if(oid===id)return false;
+      const oClipped=jobSpanDays(oj.startDate,oj.workDays).filter(d=>d>=rowStart&&d<=rowEnd);
+      if(!oClipped.length)return false;
+      const oCs=rowDates.findIndex(d=>sameDay(d,oClipped[0]));
+      const oCe=rowDates.findIndex(d=>sameDay(d,oClipped[oClipped.length-1]));
+      if(!(oCe<cs||oCs>ce)===false)return false; // no overlap
+      const overlaps=!(oCe<cs||oCs>ce);
+      if(!overlaps)return false;
+      return oj.startDate<job.startDate||
+        (oj.startDate.getTime()===job.startDate.getTime()&&(oj.placedAt||0)<(job.placedAt||0))||
+        (oj.startDate.getTime()===job.startDate.getTime()&&(oj.placedAt||0)===(job.placedAt||0)&&oid<id);
+    }).length;
+
+    const top=MV_TILE_TOP+posInDay*(MV_TILE_H+MV_TILE_GAP);
+    const leftPct=(cs/7)*100, widthPct=((ce-cs+1)/7)*100;
+    const contL=!sameDay(first,job.startDate);
+    const jobEnd=addWorkDays(job.startDate,job.workDays);
+    const contR=!sameDay(last,jobEnd);
+    const jt=getJobType(job.typeKey);
+
+    const tile=document.createElement('div');
+    tile.className=`mv-tile ${displayStatus(id)}`;
+    if(contL&&contR)tile.classList.add('cont-both');
+    else if(contL)tile.classList.add('cont-left');
+    else if(contR)tile.classList.add('cont-right');
+    tile.style.left=`calc(${leftPct}% + 3px)`;
+    tile.style.width=`calc(${widthPct}% - 6px)`;
+    tile.style.top=top+'px';
+    tile.style.height=MV_TILE_H+'px';
+
+    if(!contL){
+      tile.innerHTML=`<i class="ti ${jt.icon}" style="font-size:10px;flex-shrink:0;color:${jt.color}"></i><span style="overflow:hidden;text-overflow:ellipsis;flex:1">${job.name}</span>`;
+    } else {
+      tile.innerHTML=`<span style="overflow:hidden;text-overflow:ellipsis;flex:1;padding-left:4px;opacity:.6">${job.name}</span>`;
+    }
+
+    tile.addEventListener('click',()=>openSB(id,'month'));
+    tile.draggable=true;
+    tile.dataset.id=id;
+    tile.dataset.placed='1';
+    tile.addEventListener('dragstart',e=>{
+      dragCard=tile;tile.style.opacity='.4';
+      document.body.classList.add('dragging-job');
+      e.dataTransfer.effectAllowed='move';
+    });
+    tile.addEventListener('dragend',()=>{
+      tile.style.opacity='';
+      document.body.classList.remove('dragging-job');
+    });
+    layer.appendChild(tile);
+  });
+
+  // Make row tall enough to fit all tiles
+  const maxPos=jobsInRow.reduce((max,{id,job,sp})=>{
+    const clipped=sp.filter(d=>d>=rowStart&&d<=rowEnd);if(!clipped.length)return max;
+    const cs=rowDates.findIndex(d=>sameDay(d,clipped[0]));
+    const ce=rowDates.findIndex(d=>sameDay(d,clipped[clipped.length-1]));
+    const pos=jobsInRow.filter(({id:oid,job:oj})=>{
+      if(oid===id)return false;
+      const oC=jobSpanDays(oj.startDate,oj.workDays).filter(d=>d>=rowStart&&d<=rowEnd);
+      if(!oC.length)return false;
+      const oCs=rowDates.findIndex(d=>sameDay(d,oC[0]));
+      const oCe=rowDates.findIndex(d=>sameDay(d,oC[oC.length-1]));
+      if(!(!(oCe<cs||oCs>ce)))return false;
+      return oj.startDate<job.startDate||
+        (oj.startDate.getTime()===job.startDate.getTime()&&(oj.placedAt||0)<(job.placedAt||0))||
+        (oj.startDate.getTime()===job.startDate.getTime()&&(oj.placedAt||0)===(job.placedAt||0)&&oid<id);
+    }).length;
+    return Math.max(max,pos);
+  },0);
+  const minH=MV_TILE_TOP+(maxPos+1)*(MV_TILE_H+MV_TILE_GAP)+6;
+  rowEl.querySelectorAll('.mv-day-cell').forEach(c=>{ if(c.offsetHeight<minH)c.style.minHeight=minH+'px'; });
+  rowEl.appendChild(layer);
+}
+// ── WEEK VIEW ── (expanded cards with job details, no overlay)
+function buildWeekView(){
+  const sun=currentWeekSunday();
+  const wdays=weekDays(sun);
+  // Headers
+  const hdrs=document.getElementById('wv-col-headers');hdrs.innerHTML='';
+  wdays.forEach(d=>{
+    const wknd=isWeekend(d);
+    const ch=document.createElement('div');ch.className='wh-cell'+(wknd?' wknd':'');
+    const num=document.createElement('div');num.className='dh-num'+(sameDay(d,today())?' today':'');num.textContent=d.getDate();
+    ch.innerHTML=`<div class="dh-name">${DOW[d.getDay()]}</div>`;ch.appendChild(num);hdrs.appendChild(ch);
+  });
+  const grid=document.getElementById('wv-grid');grid.innerHTML='';
+  // Build 7 columns
+  const cols=wdays.map(d=>{
+    const cell=document.createElement('div');cell.className='wv-day-cell'+(isWeekend(d)?' wknd':'');return cell;
+  });
+  // Place jobs into columns — each job appears on its start day as a full card, continuation days get a slim banner
+  Object.entries(jobs).forEach(([id,job])=>{
+    if(!job.startDate)return;
+    const span=jobSpanDays(job.startDate,job.workDays);
+    span.forEach((d,i)=>{
+      const ci=wdays.findIndex(wd=>sameDay(wd,d));
+      if(ci<0)return;
+      const jt=getJobType(job.typeKey);
+      if(i===0){
+        // Full expanded card
+        const card=document.createElement('div');card.className=`wv-job-card ${displayStatus(id)}`;
+        const chkHtml=job.status!=='invoiced'
+          ?`<span class="wv-check${job.status==='complete'?' done':''}" data-id="${id}"></span>`
+          :`<i class="ti ti-circle-check" style="font-size:12px"></i>`;
+        const addrRow=job.addr?`<div class="wv-job-card-row"><i class="ti ti-map-pin" style="font-size:10px;flex-shrink:0"></i>${job.addr}</div>`:'';
+        const descRow=job.notes?`<div class="wv-job-card-desc">${job.notes}</div>`:'';
+        card.innerHTML=`
+          <div class="wv-job-card-title">
+            <i class="ti ${jt.icon}" style="font-size:12px;flex-shrink:0;color:${jt.color}"></i>
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${job.name}</span>
+            ${chkHtml}
+          </div>
+          <div class="wv-job-card-row"><i class="ti ti-user" style="font-size:10px;flex-shrink:0"></i>${job.customer}</div>
+          <div class="wv-job-card-row"><i class="ti ti-phone" style="font-size:10px;flex-shrink:0"></i>${job.phone}</div>
+          ${addrRow}${descRow}`;
+        card.querySelector('.wv-check')?.addEventListener('click',e=>{e.stopPropagation();tileCheckClick(id);});
+        card.addEventListener('click',()=>openSB(id,'week'));
+        card.draggable=true;
+        card.dataset.id=id;
+        card.addEventListener('dragstart',e=>{
+          dragCard=card;card.style.opacity='.4';
+          document.body.classList.add('dragging-job');
+          e.dataTransfer.effectAllowed='move';
+        });
+        card.addEventListener('dragend',()=>{
+          card.style.opacity='';
+          document.body.classList.remove('dragging-job');
+        });
+        cols[ci].appendChild(card);
+      } else {
+        // Slim continuation banner
+        const jt=getJobType(job.typeKey);
+        const banner=document.createElement('div');banner.className=`wv-cont-banner ${job.status}`;
+        banner.innerHTML=`<i class="ti ti-arrow-right" style="font-size:10px"></i>${job.name} cont.`;
+        banner.addEventListener('click',()=>openSB(id,'week'));
+        cols[ci].appendChild(banner);
+      }
+    });
+  });
+  cols.forEach(c=>grid.appendChild(c));
+}
+
+// ── RESIZE ──
+let resizeState=null;
+function startResize(e,jobId,side){
+  e.preventDefault();e.stopPropagation();
+  resizeState={jobId,side,startX:e.clientX,origWorkDays:jobs[jobId].workDays,origStart:new Date(jobs[jobId].startDate),lastDelta:0};
+  document.body.style.cursor='ew-resize';
+  document.body.style.userSelect='none';
+  document.addEventListener('mousemove',onResizeMove);
+  document.addEventListener('mouseup',onResizeUp);
+}
+function onResizeMove(e){
+  if(!resizeState)return;
+  const{jobId,side,startX,origWorkDays,origStart}=resizeState;
+  const rows=document.querySelectorAll('.sw-week-row');
+  const row=rows[0];if(!row)return;
+  const colW=row.getBoundingClientRect().width/7;
+  const deltaCols=Math.round((e.clientX-startX)/colW);
+  if(deltaCols===resizeState.lastDelta)return;
+  resizeState.lastDelta=deltaCols;
+  if(side==='right'){
+    jobs[jobId].workDays=Math.max(1,origWorkDays+deltaCols);
+  } else {
+    // Move start: shift start date by deltaCols calendar days, keep work days same
+    const newStart=addDays(origStart,deltaCols);
+    jobs[jobId].startDate=newStart;
+  }
+  buildQueue(); // rebuild on each meaningful delta change
+}
+function onResizeUp(){
+  if(!resizeState)return;
+  resizeState=null;
+  document.body.style.cursor='';
+  document.body.style.userSelect='';
+  document.removeEventListener('mousemove',onResizeMove);
+  document.removeEventListener('mouseup',onResizeUp);
+  rebuildAll();refreshSB();
+}
+
+// ── TILE CHECK CLICK ──
+// Returns all job IDs linked to this one (parent + all return visits, recursively)
+function getLinkedJobIds(id){
+  const ids=new Set();
+  function collect(jid){
+    if(ids.has(jid))return;ids.add(jid);
+    const j=jobs[jid];if(!j)return;
+    if(j.parentJobId)collect(j.parentJobId);
+    (j.returnVisits||[]).forEach(collect);
+  }
+  collect(id);
+  return [...ids];
+}
+function tileCheckClick(id){
+  const job=jobs[id];
+  if(['complete','followup'].includes(job.status)){
+    // Toggle back to confirmed for this job only
+    job.status='confirmed';rebuildAll();refreshSB();
+  } else {
+    // Mark this job complete, then open followup prompt
+    job.status='complete';
+    rebuildAll();
+    openSBWithFollowup(id,currentView==='week'?'week':currentView==='week'?'week':'month');
+  }
+}
+function markAllLinkedComplete(id){
+  // Mark all jobs in the linked chain as complete
+  getLinkedJobIds(id).forEach(jid=>{
+    if(jobs[jid]&&!['invoiced'].includes(jobs[jid].status))jobs[jid].status='complete';
+  });
+  rebuildAll();refreshSB();
+}
+
+// ── SIDEBAR ──
+function openSB(id,view){
+  // Always use month sidebar when not in week view
+  const v=currentView==='week'?'week':'month';
+  openSidebarId=id;openSidebarView=v;
+  document.getElementById('month-sb').style.display=v==='month'?'flex':'none';
+  document.getElementById('week-sb').style.display=v==='week'?'flex':'none';
+  document.getElementById(v==='month'?'msb-title':'wsb-title').textContent=jobs[id].name;
+  renderSBBody(id,v==='month'?'msb-body':'wsb-body',v,false);
+}
+function openSBWithFollowup(id,view){
+  const v=currentView==='week'?'week':'month';
+  openSidebarId=id;openSidebarView=v;
+  // Hide all sidebars first, then show correct one
+  ['month-sb','week-sb'].forEach(s=>document.getElementById(s).style.display='none');
+  const sbEl=document.getElementById(v==='month'?'month-sb':'week-sb');
+  sbEl.style.display='flex';
+  document.getElementById(v==='month'?'msb-title':'wsb-title').textContent=jobs[id].name;
+  renderSBBody(id,v==='month'?'msb-body':'wsb-body',v,true);
+}
+function closeSB(id){document.getElementById(id).style.display='none';openSidebarId=null;openSidebarView=null;}
+function refreshSB(){
+  if(!openSidebarId||!openSidebarView)return;
+  const v=openSidebarView;
+  document.getElementById(v==='month'?'msb-title':'wsb-title').textContent=jobs[openSidebarId].name;
+  renderSBBody(openSidebarId,v==='month'?'msb-body':'wsb-body',v,false);
+}
+
+function chainRoot(jid){const j=jobs[jid];return(j&&j.parentJobId&&jobs[j.parentJobId])?chainRoot(j.parentJobId):jid;}
+function flatChain(jid){const j=jobs[jid];if(!j)return[];return[jid,...(j.returnVisits||[]).flatMap(flatChain)];}
+
+function displayStatus(id){
+  const job=jobs[id];if(!job)return'confirmed';
+  if(job.status==='invoiced')return'invoiced';
+  if(job.returnVisits&&job.returnVisits.length){
+    const downstream=flatChain(id).slice(1);
+    const allDone=downstream.every(jid=>jobs[jid]&&['complete','invoiced'].includes(jobs[jid].status));
+    if(allDone&&['complete','invoiced'].includes(job.status))return'past_followup';
+    return'followup';
+  }
+  return job.status;
+}
+
+function renderSBBody(id,bodyId,view,showFollowupPrompt){
+  const job=jobs[id];if(!job)return;
+  if(!job.checklist)job.checklist=[];
+  const jt=getJobType(job.typeKey);const ct=getCustType(job.cust);
+  const checks=job.checklist.map((c,i)=>{
+    const ico=c.ok===true?'ti-circle-check':c.ok===false?'ti-circle-x':'ti-circle-dot';
+    const col=c.ok===true?'#15803d':c.ok===false?'#dc2626':'#d97706';
+    return`<div class="ci" onclick="event.stopPropagation();cycleCheck('${id}',${i})" title="Click to toggle">
+      <i class="ti ${ico}" style="font-size:15px;color:${col};flex-shrink:0"></i>
+      <span style="${c.ok===false?'text-decoration:line-through;opacity:.5':''}${c.ok===true?'color:var(--green-text)':''}">${c.t}</span>
+    </div>`;
+  }).join('');
+
+  const schedSts=['tentative','confirmed'];
+  const statusSel=schedSts.includes(job.status)?`
+    <div>
+      <div class="sdl" style="margin-bottom:5px">Scheduling status</div>
+      <div class="status-selector">
+        ${schedSts.map(s=>`<button class="status-opt${job.status===s?' sel-'+s:''}" onclick="setStatus('${id}','${s}')"><div class="sdot ${s}"></div>${STATUS_LABELS[s]}${job.status===s?'<i class="ti ti-check" style="margin-left:auto;font-size:11px"></i>':''}</button>`).join('')}
+      </div>
+    </div><div class="divider"></div>`:'' ;
+
+  const followupPrompt=showFollowupPrompt?`
+    <div class="followup-prompt">
+      <div class="followup-prompt-title"><i class="ti ti-rotate-clockwise" style="font-size:14px"></i>Need a follow-up visit?</div>
+      <div class="followup-btns">
+        <button class="fp-yes" onclick="openReturnModal('${id}','${view}')"><i class="ti ti-plus" style="font-size:11px"></i> Yes, add return visit</button>
+        <button class="fp-no" onclick="dismissFollowup('${id}','${view}')">No, all done</button>
+      </div>
+    </div>`:'';
+
+  let actions='';
+  const linkedIds=getLinkedJobIds(id).filter(jid=>jid!==id&&jobs[jid]);
+  const hasLinks=linkedIds.length>0;
+  if(schedSts.includes(job.status)){
+    actions+=`<div class="arow"><button class="ab primary"><i class="ti ti-send" style="font-size:11px"></i>Send reminder</button><button class="ab green" onclick="markComplete('${id}','${view}')"><i class="ti ti-check" style="font-size:11px"></i>${hasLinks?'Mark all complete':'Mark complete'}</button></div>`;
+  }
+  if(job.status==='complete'){
+    actions+=`<div class="arow"><button class="ab qbo" onclick="sendQBO('${id}')"><i class="ti ti-file-invoice" style="font-size:11px"></i>Send to QuickBooks</button></div>`;
+    actions+=`<div class="arow"><button class="ab" onclick="markBilled('${id}')" style="font-size:10px;color:var(--text3)"><i class="ti ti-circle-check" style="font-size:11px"></i>Mark as billed</button></div>`;
+    actions+=`<div class="arow"><button class="ab" onclick="openSBWithFollowup('${id}','${view}')"><i class="ti ti-rotate-clockwise" style="font-size:11px"></i>Add follow-up visit</button></div>`;
+  }
+  if(job.status==='followup')actions+=`<div class="arow"><button class="ab qbo" onclick="sendQBO('${id}')"><i class="ti ti-file-invoice" style="font-size:11px"></i>Send to QuickBooks</button></div>`;
+  if(job.status==='invoiced')actions+=`<div class="qbo-note"><i class="ti ti-circle-check" style="font-size:14px;flex-shrink:0;margin-top:1px"></i><span>Draft invoice created in QuickBooks Online. Voltboard will update automatically when sent.</span></div>`;
+  actions+=`<div class="arow"><button class="ab" onclick="openAddModal('${id}')"><i class="ti ti-edit" style="font-size:11px"></i>Edit</button><button class="ab danger" onclick="deleteJob('${id}','${view}')"><i class="ti ti-trash" style="font-size:11px"></i>Delete</button></div>`;
+
+  const addrHtml=job.addr?`<div class="sdv addr"><i class="ti ti-map-pin" style="font-size:11px;margin-right:3px"></i>${job.addr}</div>`:'';
+
+  // Job chain — show for any job that has a parent OR has return visits
+  let linkedHtml='';
+  const hasParent=!!job.parentJobId&&!!jobs[job.parentJobId];
+  const hasReturns=!!(job.returnVisits&&job.returnVisits.length);
+  const allLinked=getLinkedJobIds(id);
+  if(hasParent||hasReturns||allLinked.length>1){
+    const root=chainRoot(id);
+    const ordered=flatChain(root);
+    // Find the index of the current job to determine what's "past"
+    const currentIdx=ordered.indexOf(id);
+    const items=ordered.map((jid,i)=>{
+      const j=jobs[jid];if(!j)return'';
+      const isCurrent=jid===id;
+      const isPast=i<currentIdx;
+      const isDone=['complete','invoiced'].includes(j.status);
+      // A followup job that has a return scheduled (returnVisits exists) is "past followup" — pale amber
+      const isPastFollowup=j.status==='followup'&&(j.returnVisits&&j.returnVisits.length>0);
+      const dotClass=isDone?'done':isCurrent?'current':isPastFollowup?'past-followup':'pending';
+      const ds=j.startDate?fmtDate(j.startDate):'Unscheduled';
+      const visitLabel=i===0?'Original job':`Visit ${i+1}`;
+      const checkIcon=isDone?`<i class="ti ti-check" style="font-size:10px;color:var(--green);margin-right:3px"></i>`:'';
+      // Styling per state
+      let cardStyle='border:1px solid var(--border);background:var(--surface);';
+      let nameColor='color:var(--text);';
+      let metaColor='color:var(--text3);';
+      if(isCurrent){cardStyle='border:1px solid #93c5fd;background:#eff6ff;';nameColor='color:var(--blue-text);';metaColor='color:var(--blue);';}
+      else if(isDone){cardStyle='border:1px solid var(--border);background:var(--surface);opacity:.65;';}
+      else if(isPastFollowup){cardStyle='border:1px solid #fde68a;background:#fffdf5;opacity:.7;';nameColor='color:var(--amber-text);';metaColor='color:var(--amber);';}
+      else if(j.status==='followup'){cardStyle='border:1px solid #fcd34d;background:#fffbeb;';nameColor='color:var(--amber-text);';metaColor='color:var(--amber-text);';}
+      let dotStyle='';
+      if(dotClass==='past-followup')dotStyle='background:#fde68a;border-color:#f59e0b;opacity:.6;';
+      else if(dotClass==='pending')dotStyle='background:#fde68a;border-color:#f59e0b;';
+      const connector=i<ordered.length-1?`<div class="chain-connector"></div>`:'';
+      return`<div class="chain-item">
+        <div class="chain-line"><div class="chain-dot ${isDone?'done':isCurrent?'current':''}" style="${dotStyle}"></div>${connector}</div>
+        <div class="chain-card ${isCurrent?'current':isDone?'done':''}" style="${cardStyle}cursor:pointer;padding:6px 9px;border-radius:var(--radius);margin:3px 0;" onclick="openSB('${jid}','${view}')">
+          <div class="chain-name" style="${nameColor}">${checkIcon}${j.name}</div>
+          <div class="chain-meta" style="${metaColor}">${ds} · ${visitLabel}${isCurrent?' · Viewing now':''}</div>
+        </div>
+      </div>`;
+    }).join('');
+    linkedHtml=`<div class="divider"></div><div><div class="sdl">Job chain</div><div style="display:flex;flex-direction:column">${items}</div></div>`;
+  }
+
+  document.getElementById(bodyId).innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:30px;height:30px;border-radius:7px;background:${jt.iconBg};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ${jt.icon}" style="font-size:15px;color:${jt.color}"></i></div>
+      <div><span class="sbadge ${displayStatus(id)}">${STATUS_LABELS[job.status]}</span><div style="font-size:10px;color:var(--text3);margin-top:2px">${ct.label}</div></div>
+    </div>
+    ${statusSel}${followupPrompt}
+    <div><div class="sdl">Customer</div><div class="sdv">${job.customer}</div><div class="sdv phone">${job.phone}</div>${addrHtml}</div>
+    <div>
+      <div class="sdl">Scheduled</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap">
+        <input type="date" value="${dateToInput(job.startDate)}" onchange="updateJobDate('${id}',this.value)" style="flex:1;min-width:120px;padding:5px 8px;border:1px solid var(--border2);border-radius:var(--radius);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--surface);outline:none"/>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+          <button onclick="updateJobWorkDays('${id}',-1)" style="width:24px;height:24px;border:1px solid var(--border);border-radius:var(--radius);background:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2)">−</button>
+          <span style="font-size:12px;font-weight:500;min-width:20px;text-align:center" id="wd-${id}">${job.workDays}</span>
+          <button onclick="updateJobWorkDays('${id}',1)" style="width:24px;height:24px;border:1px solid var(--border);border-radius:var(--radius);background:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text2)">+</button>
+          <span style="font-size:11px;color:var(--text3)">day${job.workDays!==1?'s':''}</span>
+        </div>
+      </div>
+    </div>
+    ${linkedHtml}
+    <div class="divider"></div>
+    <div>
+      <button onclick="toggleChecklist(this)" style="display:flex;align-items:center;gap:5px;width:100%;background:none;border:none;cursor:pointer;padding:0;text-align:left;">
+        <div class="sdl" style="margin-bottom:0;flex:1">Readiness checklist</div>
+        <i class="ti ti-chevron-right" style="font-size:11px;color:var(--text3);transition:transform .15s"></i>
+      </button>
+      <div class="checklist" style="display:none;margin-top:7px">${checks}</div>
+    </div>
+    <div><div class="sdl">Description</div><textarea
+      onchange="updateJobNotes('${id}',this.value)"
+      onfocus="this.style.borderColor='var(--blue)'"
+      onblur="this.style.borderColor='var(--border)'"
+      style="width:100%;padding:9px;background:var(--surface2);border-radius:var(--radius);font-size:11px;color:${job.notes?'var(--text2)':'var(--text3)'};line-height:1.6;border:1px solid var(--border);font-family:'DM Sans',sans-serif;resize:vertical;min-height:64px;outline:none"
+      placeholder="No description — type here to add details."
+    >${job.notes||''}</textarea></div>
+    <div class="divider"></div>
+    ${actions}`;
+}
+
+function setStatus(id,status){jobs[id].status=status;rebuildAll();refreshSB();}
+function updateJobNotes(id,val){jobs[id].notes=val;}
+function updateJobDate(id,val){jobs[id].startDate=inputToDate(val)||null;rebuildAll();const el=document.getElementById('wd-'+id);if(el)el.textContent=jobs[id].workDays;}
+function updateJobWorkDays(id,delta){const j=jobs[id];j.workDays=Math.max(1,j.workDays+delta);rebuildAll();const el=document.getElementById('wd-'+id);if(el)el.textContent=j.workDays;}
+function markComplete(id,view){
+  getLinkedJobIds(id).forEach(jid=>{
+    if(jobs[jid]&&!['invoiced'].includes(jobs[jid].status))jobs[jid].status='complete';
+  });
+  openSBWithFollowup(id,view);
+}
+function dismissFollowup(id,view){
+  const v=currentView==='week'?'week':'month';
+  const bodyId=v==='month'?'msb-body':'wsb-body';
+  renderSBBody(id,bodyId,v,false);
+  rebuildAll();
+}
+function sendQBO(id){jobs[id].status='invoiced';const inv=jobs[id].checklist.find(c=>c.t.toLowerCase().includes('invoice'));if(inv)inv.ok=true;rebuildAll();refreshSB();}
+function markBilled(id){jobs[id].status='invoiced';rebuildAll();refreshSB();}
+function unscheduleJob(id){
+  if(!jobs[id])return;
+  const job=jobs[id];
+  job.startDate=null;
+  // Add back to unscheduled queue if not already there
+  if(!unscheduled.find(u=>u.id===id)){
+    unscheduled.push({id,typeKey:job.typeKey,label:job.name,cust:job.cust});
+  }
+  rebuildAll();
+}
+function deleteJob(id,view){if(!confirm(`Delete "${jobs[id].name}"?`))return;delete jobs[id];const sbId=currentView==='week'?'week-sb':'month-sb';closeSB(sbId);rebuildAll();}
+let monthViewDirty=true;
+
+function rebuildAll(){
+  updateQueueCount();
+  if(currentView==='month'){
+    const vm=_visibleMonth();
+    buildMonthView();monthViewDirty=false;
+    setTimeout(()=>scrollToMonth(vm.year,vm.month),50);
+  } else if(currentView==='week'){
+    buildWeekView();
+  }
+  buildQueue();
+  if(typeof scheduleSave==='function')scheduleSave();
+}
+function updateQueueCount(){
+  const count=unscheduled.length;
+  const el1=document.getElementById('q-count');
+  const el2=document.getElementById('q-count-strip');
+  if(el1)el1.textContent=count;
+  if(el2)el2.textContent=count;
+}
+function toggleChecklist(btn){const list=btn.nextElementSibling;const chv=btn.querySelector('.ti-chevron-right');const open=list.style.display==='none';list.style.display=open?'flex':'none';chv.style.transform=open?'rotate(90deg)':'rotate(0deg)';}
+function cycleCheck(id,idx){const c=jobs[id].checklist[idx];c.ok=c.ok===null||c.ok===undefined?true:c.ok===true?false:null;refreshSB();}
+
+// ── RETURN VISIT MODAL ──
+let pendingReturnView_=null;
+function openReturnModal(parentId,view){
+  if(document.getElementById('add-modal').style.display==='flex')return; // already open
+  refreshSB(); // remove followup prompt from sidebar
+  pendingReturnParentId=parentId;pendingReturnView=view;
+  const orig=jobs[parentId];populateSelects();
+  const retRoot=chainRoot(parentId);
+  const retBaseName=jobs[retRoot].customer||jobs[retRoot].name;
+  document.getElementById('modal-heading').innerHTML=`<span>Return visit</span><span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:8px">linked to: ${orig.name}</span>`;
+  document.getElementById('modal-save-btn').textContent='Add return visit';
+  editingJobId=null;
+  document.getElementById('f-name').value=retBaseName;
+  document.getElementById('f-phone').value=orig.phone==='—'?'':orig.phone;
+  document.getElementById('f-type').value=orig.typeKey;
+  document.getElementById('f-cust').value=orig.cust||'ho';
+  document.getElementById('f-checklist').value='Return visit complete';
+  document.getElementById('f-notes').value='Return visit for: '+orig.name+(orig.notes?'\n\nOriginal description: '+orig.notes:'');
+  ['f-addr1','f-city','f-zip'].forEach(i=>document.getElementById(i).value='');
+  if(orig.addr){const parts=orig.addr.split(',');document.getElementById('f-addr1').value=parts[0]?.trim()||'';const cz=(parts[1]||'').trim();const si=cz.lastIndexOf(' ');if(si>0){document.getElementById('f-city').value=cz.substring(0,si).trim();document.getElementById('f-zip').value=cz.substring(si+1).trim();}else document.getElementById('f-city').value=cz;if(!addrOpen)toggleAddr();}else{if(addrOpen)toggleAddr();}
+  document.getElementById('add-modal').style.display='flex';
+}
+
+// ── ADD/EDIT MODAL ──
+let addrOpen=false;
+function toggleAddr(){
+  addrOpen=!addrOpen;
+  document.getElementById('addr-section').classList.toggle('open',addrOpen);
+  document.getElementById('addr-chevron').style.transform=addrOpen?'rotate(90deg)':'rotate(0deg)';
+  const btn=document.getElementById('addr-toggle-btn');
+  btn.innerHTML=`<i class="ti ti-chevron-right" id="addr-chevron" style="font-size:11px;transition:transform .15s;transform:${addrOpen?'rotate(90deg)':'rotate(0deg)'}"></i> ${addrOpen?'Hide address':'Add address'}`;
+}
+function populateSelects(){
+  document.getElementById('f-type').innerHTML=jobTypes.map(t=>`<option value="${t.id}">${t.label}</option>`).join('');
+  document.getElementById('f-cust').innerHTML=custTypes.map(t=>`<option value="${t.id}">${t.label}</option>`).join('');
+}
+function applyDefaultChecklist(typeKey){
+  const trimTypes=['remodel_trim','nc_trim'];
+  document.getElementById('f-checklist').value=trimTypes.includes(typeKey)?'All fixtures on site\nHardware unopened\nConfirm access':'Confirm with customer\nMaterials ready';
+}
+function openAddModal(editId){
+  editingJobId=editId||null;populateSelects();
+  document.getElementById('modal-heading').textContent=editId?'Edit job':'Add new job';
+  document.getElementById('modal-save-btn').textContent=editId?'Save changes':'Add to unscheduled';
+  if(editId){
+    const j=jobs[editId]||(unscheduled.find(u=>u.id===editId)?{customer:unscheduled.find(u=>u.id===editId).label,phone:'',typeKey:unscheduled.find(u=>u.id===editId).typeKey,cust:unscheduled.find(u=>u.id===editId).cust,checklist:[],notes:'',addr:''}:null);
+    if(!j)return;
+    document.getElementById('f-name').value=j.customer||j.name||'';
+    document.getElementById('f-phone').value=(j.phone==='—'||!j.phone)?'':j.phone;
+    document.getElementById('f-type').value=j.typeKey;
+    document.getElementById('f-cust').value=j.cust||'ho';
+    document.getElementById('f-checklist').value=(j.checklist||[]).map(c=>c.t).join('\n');
+    document.getElementById('f-notes').value=j.notes||'';
+    if(j.addr){const parts=j.addr.split(',');document.getElementById('f-addr1').value=parts[0]?.trim()||'';const cz=(parts[1]||'').trim();const si=cz.lastIndexOf(' ');if(si>0){document.getElementById('f-city').value=cz.substring(0,si).trim();document.getElementById('f-zip').value=cz.substring(si+1).trim();}else document.getElementById('f-city').value=cz;if(!addrOpen)toggleAddr();}
+    else{['f-addr1','f-city','f-zip'].forEach(i=>document.getElementById(i).value='');if(addrOpen)toggleAddr();}
+  } else {
+    ['f-name','f-phone','f-notes','f-addr1','f-city','f-zip'].forEach(i=>document.getElementById(i).value='');
+    applyDefaultChecklist(document.getElementById('f-type').value);
+    if(addrOpen)toggleAddr();
+  }
+  document.getElementById('f-type').onchange=function(){if(!editingJobId)applyDefaultChecklist(this.value);};
+  document.getElementById('add-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('f-name').focus(),50);
+}
+function closeAddModal(){document.getElementById('add-modal').style.display='none';editingJobId=null;pendingReturnParentId=null;pendingReturnView=null;}
+// Enter key saves from any input/select in the modal
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&document.getElementById('add-modal').style.display==='flex'){
+    if(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='SELECT'){
+      e.preventDefault();saveJob();
+    }
+  }
+});
+function saveJob(){
+  const name=document.getElementById('f-name').value.trim();if(!name){document.getElementById('f-name').focus();return;}
+  const phone=document.getElementById('f-phone').value.trim()||'—';
+  const typeKey=document.getElementById('f-type').value;const cust=document.getElementById('f-cust').value;
+  const notes=document.getElementById('f-notes').value.trim();
+  const clRaw=document.getElementById('f-checklist').value.trim();
+  const checklist=clRaw?clRaw.split('\n').filter(l=>l.trim()).map(t=>({ok:null,t:t.trim()})):[{ok:null,t:'Confirm with customer'},{ok:null,t:'Materials ready'}];
+  const a1=document.getElementById('f-addr1').value.trim();
+  const city=document.getElementById('f-city').value.trim();
+  const zip=document.getElementById('f-zip').value.trim();
+  const addr=[a1,[city,zip].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  if(editingJobId){
+    // Could be editing a scheduled job or an unscheduled one
+    if(jobs[editingJobId]){Object.assign(jobs[editingJobId],{name,customer:name,phone,typeKey,cust,notes,checklist,addr});}
+    else{const u=unscheduled.find(u=>u.id===editingJobId);if(u){u.label=name;u.typeKey=typeKey;u.cust=cust;}}
+    rebuildAll();refreshSB();
+  } else if(pendingReturnParentId){
+    jobs[pendingReturnParentId].status='followup';
+    const retId='ret_'+Date.now();
+    // Find the root job to count how many returns already exist
+    const root=chainRoot(pendingReturnParentId);
+    const existingChain=flatChain(root);
+    const visitNum=existingChain.length;
+    const baseName=jobs[root].customer||jobs[root].name;
+    const displayName=visitNum===1?`${baseName} — Return`:`${baseName} — Return ${visitNum}`;
+    jobs[retId]={name:displayName,typeKey,status:'confirmed',workDays:1,startDate:null,cust,customer:baseName,phone,addr,checklist,notes,parentJobId:pendingReturnParentId};
+    if(!jobs[pendingReturnParentId].returnVisits)jobs[pendingReturnParentId].returnVisits=[];
+    jobs[pendingReturnParentId].returnVisits.push(retId);
+    unscheduled.push({id:retId,typeKey,label:displayName,cust});
+    const rv=pendingReturnView;
+    closeAddModal();
+    rebuildAll();openSB(pendingReturnParentId,rv);
+  } else {
+    const id='job_'+Date.now();
+    unscheduled.push({id,typeKey,label:name,cust});
+    jobs[id]={name,typeKey,status:'confirmed',workDays:1,startDate:null,cust,customer:name,phone,addr,checklist,notes};
+    closeAddModal();
+    updateQueueCount();
+    buildQueue();
+    return;
+  }
+  closeAddModal();
+}
+
+// ── SETTINGS ──
+function openSettings(){renderSettings();document.getElementById('settings-overlay').style.display='flex';}
+function closeSettings(){document.getElementById('settings-overlay').style.display='none';}
+function closeSettingsBg(e){if(e.target===document.getElementById('settings-overlay'))closeSettings();}
+function renderSettings(){
+  renderTypeList('job-type-list',jobTypes,'deleteJobType');
+  renderTypeList('cust-type-list',custTypes,'deleteCustType');
+}
+function renderTypeList(cid,types,delFnName){
+  const el=document.getElementById(cid);el.innerHTML='';
+  types.forEach(t=>{
+    const row=document.createElement('div');row.className='type-row';
+    row.innerHTML=`<div class="type-icon-box" style="background:${t.iconBg}"><i class="ti ${t.icon}" style="color:${t.color}"></i></div><span class="type-name">${t.label}</span><button class="type-del" onclick="${delFnName}('${t.id}')"><i class="ti ti-x"></i></button>`;
+    el.appendChild(row);
+  });
+}
+function addJobType(){const inp=document.getElementById('new-job-type');const label=inp.value.trim();if(!label)return;jobTypes.push({id:'jt_'+Date.now(),label,icon:nextIcon(),color:nextColor(),iconBg:'#f0efe9'});inp.value='';renderSettings();populateSelects();}
+function addCustType(){const inp=document.getElementById('new-cust-type');const label=inp.value.trim();if(!label)return;custTypes.push({id:'ct_'+Date.now(),label,icon:nextIcon(),color:nextColor(),iconBg:'#f0efe9'});inp.value='';renderSettings();populateSelects();}
+function deleteJobType(id){if(jobTypes.length<=1){alert('Need at least one job type.');return;}jobTypes=jobTypes.filter(t=>t.id!==id);renderSettings();populateSelects();}
+function deleteCustType(id){if(custTypes.length<=1){alert('Need at least one customer type.');return;}custTypes=custTypes.filter(t=>t.id!==id);renderSettings();populateSelects();}
+
+// ── SERVICE WORKER ──
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+// ── DEVICE DETECTION ──
+function getDevice(){
+  const w=window.innerWidth;
+  const ua=navigator.userAgent;
+  if(w<=500||(/iPhone|Android.*Mobile/i.test(ua)))return'phone';
+  if(w<=820||/iPad/i.test(ua)||(navigator.maxTouchPoints>1&&/Mac/i.test(ua)))return'tablet';
+  return'desktop';
+}
+
+// ── SUPABASE SYNC ──
+const SB_URL='https://mqdipnnwgbjzxfvbkoqi.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xZGlwbm53Z2JqenhmdmJrb3FpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDExODcsImV4cCI6MjA5NDk3NzE4N30.4kxu2UHCUs8MH2GGdwDbE14S9CWXbHRve4858x-glSs';
+const SB_HEADERS={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+let syncTimeout=null;
+
+function setSyncStatus(state){
+  const el=document.getElementById('sync-indicator');
+  if(!el)return;
+  if(state==='saving')el.innerHTML=`<i class="ti ti-cloud-upload" style="font-size:12px"></i> Saving…`;
+  else if(state==='saved')el.innerHTML=`<i class="ti ti-cloud-check" style="font-size:12px;color:#4ade80"></i> Saved`;
+  else if(state==='loading')el.innerHTML=`<i class="ti ti-cloud-download" style="font-size:12px"></i> Loading…`;
+  else if(state==='error')el.innerHTML=`<i class="ti ti-cloud-x" style="font-size:12px;color:#f87171"></i> Sync error`;
+  else el.innerHTML='';
+}
+
+async function sbSave(){
+  setSyncStatus('saving');
+  try{
+    const jobRows=Object.entries(jobs).map(([id,data])=>({id,data}));
+    jobRows.push({id:'__unscheduled__',data:unscheduled});
+
+    const res=await fetch(`${SB_URL}/rest/v1/jobs`,{
+      method:'POST',
+      headers:{...SB_HEADERS,'Prefer':'return=minimal,resolution=merge-duplicates'},
+      body:JSON.stringify(jobRows)
+    });
+    if(!res.ok){
+      const err=await res.text();
+      console.error('Supabase save failed:',res.status,err);
+      throw new Error(err);
+    }
+
+    // Delete rows no longer in jobs
+    const allIds=Object.keys(jobs).concat(['__unscheduled__']);
+    const listRes=await fetch(`${SB_URL}/rest/v1/jobs?select=id`,{headers:SB_HEADERS});
+    if(listRes.ok){
+      const stored=await listRes.json();
+      const toDelete=stored.filter(r=>!allIds.includes(r.id));
+      if(toDelete.length){
+        const ids=toDelete.map(r=>`"${r.id}"`).join(',');
+        await fetch(`${SB_URL}/rest/v1/jobs?id=in.(${ids})`,{method:'DELETE',headers:SB_HEADERS});
+      }
+    }
+    setSyncStatus('saved');
+    setTimeout(()=>setSyncStatus(''),3000);
+  }catch(e){
+    console.error('Supabase sync error:',e);
+    setSyncStatus('error');
+  }
+}
+
+function scheduleSave(){
+  clearTimeout(syncTimeout);
+  syncTimeout=setTimeout(sbSave,1500);
+}
+
+async function sbLoad(){
+  setSyncStatus('loading');
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/jobs?select=id,data`,{headers:SB_HEADERS});
+    if(!res.ok)throw new Error(await res.text());
+    const rows=await res.json();
+    if(!rows.length){setSyncStatus('');return false;} // no data yet
+    const newJobs={};
+    let newUnscheduled=null;
+    rows.forEach(row=>{
+      if(row.id==='__unscheduled__')newUnscheduled=row.data;
+      else{
+        // Restore Date objects from ISO strings
+        const j=row.data;
+        if(j.startDate)j.startDate=new Date(j.startDate);
+        newJobs[row.id]=j;
+      }
+    });
+    jobs=newJobs;
+    if(newUnscheduled)unscheduled=newUnscheduled;
+    setSyncStatus('saved');
+    setTimeout(()=>setSyncStatus(''),3000);
+    return true;
+  }catch(e){
+    console.error('Supabase load error:',e);
+    setSyncStatus('error');
+    return false;
+  }
+}
+
+// ── INIT ──
+updateRange();
+const device=getDevice();
+if(device==='phone'){
+  currentView='week';
+  document.getElementById('month-view').style.display='none';
+  document.getElementById('week-view').style.display='flex';
+  document.getElementById('cal-btn-label').textContent='Week';
+}
+(async()=>{
+  const loaded=await sbLoad();
+  if(device==='phone'||device==='tablet'){
+    if(device==='phone'){buildWeekView();}
+    else{buildMonthView();}
+  } else {
+    buildMonthView();
+  }
+  buildQueue();
+  if(!loaded)setSyncStatus('');
+})();
+</script>
+</body>
+</html>
