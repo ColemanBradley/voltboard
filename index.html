@@ -29,6 +29,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:14px;}
+@media(max-width:500px){body{font-size:max(14px,1rem);}}
 
 /* TOPBAR */
 .topbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;box-shadow:var(--shadow);z-index:20;}
@@ -56,8 +57,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .mv-col-headers{display:grid;grid-template-columns:repeat(7,1fr);background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
 .mv-ch{padding:7px 0;text-align:center;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;border-right:1px solid var(--border);}
 .mv-ch:last-child{border-right:none;}
-.mv-inner{display:flex;flex:1;min-height:0;}
+.mv-inner{display:flex;flex:1;min-height:0;position:relative;}
 .mv-scroll{flex:1;overflow-y:auto;min-height:0;}
+body.dragging-job .mv-scroll{overflow-y:hidden;}
 .mv-week-row{display:grid;grid-template-columns:repeat(7,1fr);position:relative;overflow:visible;}
 /* Fixed height month cells — no expansion */
 .mv-day-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);height:110px;padding:4px 4px 2px;display:flex;flex-direction:column;position:relative;}
@@ -71,7 +73,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .mv-month-chip{display:inline-flex;align-items:center;font-size:9px;font-weight:600;color:var(--text2);background:var(--surface3);border-radius:3px;padding:1px 5px;margin-bottom:2px;letter-spacing:.03em;}
 /* Month tiles — absolute overlay layer, same approach as schedule mode */
 .mv-tile-layer{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:2;}
-.mv-tile{position:absolute;pointer-events:all;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:500;display:flex;align-items:center;gap:3px;overflow:hidden;white-space:nowrap;cursor:pointer;}
+.mv-tile{position:absolute;pointer-events:all;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:500;display:flex;align-items:center;gap:3px;overflow:hidden;white-space:nowrap;cursor:grab;user-select:none;-webkit-user-drag:element;}
 .mv-tile:hover{filter:brightness(.93);}
 .mv-tile.tentative{background:#dbeafe;color:#0c3d6e;}
 .mv-tile.confirmed{background:#185FA5;color:#fff;}
@@ -84,6 +86,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);hei
 .mv-tile.cont-both{border-radius:0;}
 body.dragging-job .mv-tile-layer{pointer-events:none!important;z-index:0!important;}
 body.dragging-job .mv-tile{pointer-events:none!important;}
+body.dragging-job .mv-day-cell{pointer-events:all!important;}
 
 /* ── WEEK VIEW ── */
 .week-view{flex:1;display:flex;flex-direction:column;min-height:0;}
@@ -94,7 +97,7 @@ body.dragging-job .mv-tile{pointer-events:none!important;}
 .dh-name{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;}
 .dh-num{font-size:19px;font-weight:500;color:var(--text);line-height:1.3;}
 .dh-num.today{background:var(--blue);color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:14px;}
-.wv-inner{display:flex;flex:1;min-height:0;}
+.wv-inner{display:flex;flex:1;min-height:0;position:relative;}
 /* wv-scroll wraps wv-grid and provides the scrollable area */
 .wv-scroll{flex:1;overflow-y:auto;min-height:0;}
 .wv-grid{display:grid;grid-template-columns:repeat(7,1fr);}
@@ -201,45 +204,105 @@ body.dragging-job .mv-tile{pointer-events:none!important;}
 .qh{padding:9px 11px 7px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .qh:hover{background:var(--surface3);}
 .q-jobs{padding:7px;display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1;min-height:0;}
-.q-jobs.drag-over{background:#eff6ff;outline:2px dashed var(--blue);outline-offset:-4px;}
+.queue-panel.drag-over{outline:2px dashed var(--blue);outline-offset:-3px;background:var(--blue-bg)!important;}
+.q-jobs.drag-over{background:var(--blue-bg);outline:2px dashed var(--blue);outline-offset:-4px;}
 /* ── PHONE — vertical week list ── */
 @media(max-width:500px){
-  .topbar{padding:6px 10px;gap:5px;}
+  body{font-size:1rem;} /* use system font size */
+  .topbar{padding:6px 10px 6px calc(10px + env(safe-area-inset-left));gap:5px;padding-top:max(6px,env(safe-area-inset-top));}
   .legend{display:none;}
   .seg{display:none;}
+  .icon-btn{display:none;}
+  .nav-arrow{display:flex!important;padding:5px 7px;}
   .app-title{font-size:14px;}
-  .add-btn{padding:6px 10px;font-size:12px;}
+  .add-btn{display:none;} /* replaced by floating button */
   .range{font-size:12px;min-width:80px;}
-  body{overflow:auto;}
   .body-root{flex-direction:column;}
   .queue-panel{display:none;}
   .month-view{display:none!important;}
-  .week-view{display:flex!important;flex-direction:column;flex:1;}
+  .week-view{display:flex!important;flex-direction:column;flex:1;min-height:0;}
+  /* Hide the column header row — dates shown inline */
   .wv-col-headers{display:none;}
-  .wv-inner{flex:1;overflow:auto;}
-  .wv-scroll{overflow:visible;}
-  .wv-grid{display:flex!important;flex-direction:column;gap:0;}
-  .wv-day-col{display:flex;flex-direction:column;border-bottom:1px solid var(--border);}
-  .wv-dh{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);}
-  .wv-dh-name{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;width:28px;}
-  .wv-dh-date{font-size:16px;font-weight:600;}
-  .wv-day-jobs{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:40px;}
-  .wv-job-card{border-radius:var(--radius);padding:8px 10px;font-size:12px;}
-  .sidebar{width:100%!important;border-left:none;border-top:1px solid var(--border);}
+  .wv-inner{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;}
+  .wv-scroll{height:auto;overflow:visible;}
+  .wv-grid{display:flex!important;flex-direction:column;height:auto;}
+  .wv-day-cell{display:flex;flex-direction:column;min-height:0!important;padding:0;gap:0;overflow:visible;}
+  .wv-day-cell .wv-job-card{margin:4px 8px;}
+  .wv-day-cell .wv-job-card:last-child{margin-bottom:6px;}
+  .wv-day-cell .wv-cont-banner{margin:3px 8px;}
+  .wv-mobile-dh{display:flex!important;}
+  .wh-cell{display:none;}
+  /* Floating add button */
+  .sidebar{width:100%!important;border-left:none;border-top:1px solid var(--border);position:fixed!important;bottom:0;left:0;right:0;top:auto;max-height:70vh;overflow-y:auto;z-index:200;}
 }
-/* ── IPAD portrait ── */
-@media(min-width:501px)and(max-width:820px){
-  .legend{gap:5px;}
-  .li{font-size:9px;}
-  .ld{width:7px;height:7px;}
-  .range{min-width:100px;font-size:12px;}
-  .add-btn{font-size:11px;padding:5px 10px;}
-  .mv-ch{font-size:9px;padding:4px 0;}
-  .mv-day-cell{padding:3px;}
-  .mv-date{font-size:10px;height:18px;}
-  .mv-tile{font-size:9px;height:16px;padding:1px 4px;}
+/* FAB — shared between phone and tablet */
+.mobile-fab{display:none;position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));right:20px;width:52px;height:52px;border-radius:50%;background:#4a9fd4;color:#fff;border:none;font-size:24px;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(74,159,212,.5);z-index:100;cursor:pointer;}
+.mobile-fab.fab-hidden{display:none!important;}
+body.phone .mobile-fab{display:flex;}
+body.tablet .mobile-fab{display:flex;}
+/* ── IPAD — applied via JS body.tablet class ── */
+body.tablet .legend{display:none;}
+body.tablet .range{font-size:13px;}
+body.tablet .add-btn{display:none;}
+body.tablet .mv-ch{font-size:11px;padding:7px 0;font-weight:500;}
+body.tablet .mv-day-cell{padding:5px 6px;min-height:0;}
+body.tablet .mv-week-row{min-height:0;}
+body.tablet .mv-scroll{-webkit-overflow-scrolling:touch;padding-bottom:180px;}
+body.tablet .mv-tile-layer{pointer-events:none;}
+body.tablet .mv-date{font-size:15px;font-weight:600;height:24px;}
+body.tablet .mv-date.today-dot{width:22px;height:22px;font-size:12px;}
+body.tablet .mv-month-chip{font-size:13px;padding:3px 8px;margin-bottom:3px;}
+body.tablet .mv-tile{font-size:15px;height:28px;padding:3px 10px;border-radius:5px;}
+body.tablet .mv-day-cell.other{opacity:.35;}
+body.tablet .mv-ch{font-size:15px;padding:10px 0;font-weight:500;}
+body.tablet .mv-date{font-size:13px;font-weight:500;height:22px;}
+body.tablet .range{font-size:17px;font-weight:600;}
+body.tablet .app-title{font-size:18px;}
+body.tablet .tbtn{font-size:15px;padding:7px 16px;}
+body.tablet .icon-btn{font-size:16px;}
+body.tablet .qh span{font-size:15px!important;}
+body.tablet .jcard{font-size:15px;}
+body.tablet .jc-name{font-size:16px;}
+body.tablet .jc-meta{font-size:13px;}
+body.tablet .mobile-fab{display:flex!important;bottom:calc(var(--tablet-queue-h,44px) + 12px + env(safe-area-inset-bottom));}
+/* Tablet bottom queue panel */
+body.tablet .queue-panel{
+  position:fixed!important;bottom:0;left:0;right:0;width:100%!important;
+  flex-direction:column;border-right:none;border-top:1px solid var(--border);
+  max-height:180px;z-index:50;transition:height .2s ease;
 }
-.sidebar{width:272px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;min-height:0;box-shadow:-3px 0 10px rgba(0,0,0,0.06);animation:slideIn .16s ease;}
+body.tablet .queue-panel.closed{width:100%!important;height:44px;}
+body.tablet .queue-inner{width:100%;flex-direction:row;flex-wrap:wrap;gap:6px;padding:6px;}
+body.tablet .q-jobs{flex-direction:row;flex-wrap:wrap;overflow-x:auto;padding:6px;}
+body.tablet .queue-strip{flex-direction:row;align-items:center;padding:0 12px;gap:8px;width:100%;height:44px;}
+body.tablet .queue-panel.open{height:180px;}
+body.tablet .qh{cursor:pointer;}
+/* Tablet sidebar — full screen overlay */
+body.tablet .sidebar{
+  position:fixed!important;
+  top:0!important;bottom:0!important;right:0!important;
+  width:min(420px,90vw)!important;
+  box-shadow:-4px 0 24px rgba(0,0,0,0.15);
+  z-index:200;
+}
+body.tablet .sb-body{padding:18px;gap:16px;font-size:16px;}
+body.tablet .sb-title{font-size:19px;}
+body.tablet .sb-hdr{padding:18px 20px;}
+body.tablet .sdl{font-size:12px;}
+body.tablet .sdv{font-size:16px;}
+body.tablet .ab{font-size:15px;padding:12px 0;}
+body.tablet .arow{gap:10px;}
+body.tablet .sbadge{font-size:15px;padding:6px 14px;}
+body.tablet .chain-name{font-size:14px;}
+body.tablet .chain-meta{font-size:12px;}
+body.tablet .sb-close{font-size:20px;}
+body.tablet .checklist-item{font-size:15px;}
+body.tablet .sdv.addr{font-size:15px;}
+body.tablet .form-label{font-size:14px;}
+body.tablet .followup-prompt-title{font-size:15px;}
+body.tablet .fp-yes,.fp-no{font-size:14px;padding:10px 0;}
+body.tablet .sb-body textarea{font-size:16px!important;min-height:100px;padding:12px;}
+.sidebar{position:absolute;right:0;top:0;bottom:0;width:272px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;min-height:0;box-shadow:-3px 0 10px rgba(0,0,0,0.06);animation:slideIn .16s ease;z-index:10;}
 @keyframes slideIn{from{transform:translateX(16px);opacity:0}to{transform:translateX(0);opacity:1}}
 .sb-hdr{padding:11px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .sb-title{font-size:13px;font-weight:600;color:var(--text);flex:1;margin-right:8px;}
@@ -348,8 +411,8 @@ body.dragging-job .mv-tile{pointer-events:none!important;}
   <div class="tl">
     <div class="app-title"><div class="bolt-icon"><i class="ti ti-bolt"></i></div>Voltboard</div>
     <div style="display:flex;gap:2px">
-      <button class="icon-btn" onclick="shiftPeriod(-1)"><i class="ti ti-chevron-left"></i></button>
-      <button class="icon-btn" onclick="shiftPeriod(1)"><i class="ti ti-chevron-right"></i></button>
+      <button class="icon-btn nav-arrow" onclick="shiftPeriod(-1)"><i class="ti ti-chevron-left"></i></button>
+      <button class="icon-btn nav-arrow" onclick="shiftPeriod(1)"><i class="ti ti-chevron-right"></i></button>
     </div>
     <button class="tbtn" onclick="goToday()">Today</button>
     <span class="range" id="range-label"></span>
@@ -368,10 +431,25 @@ body.dragging-job .mv-tile{pointer-events:none!important;}
   <button class="icon-btn" onclick="openSettings()" title="Settings"><i class="ti ti-menu-2"></i></button>
 </div>
 
+<button class="mobile-fab" onclick="openAddModal(null)" id="mobile-fab"><i class="ti ti-plus"></i></button>
+
+<!-- Mobile full-screen job detail -->
+<div id="mobile-job-overlay" style="display:none;position:fixed;inset:0;background:var(--surface);z-index:500;flex-direction:column;overflow:hidden;">
+  <div style="display:flex;align-items:center;gap:10px;padding:max(14px,env(safe-area-inset-top)) 14px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;">
+    <button onclick="closeMobileJob()" style="background:none;border:none;color:var(--text2);padding:4px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:13px;font-family:'DM Sans',sans-serif;"><i class="ti ti-arrow-left" style="font-size:16px"></i>Back</button>
+    <span id="mobile-job-title" style="font-size:15px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+  </div>
+  <div id="mobile-job-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 16px env(safe-area-inset-bottom);font-size:1rem;"></div>
+</div>
+
 <div class="body-root">
 
   <!-- COLLAPSIBLE QUEUE PANEL — click strip or header to open/close -->
   <div class="queue-panel closed" id="queue-panel">
+    <!-- Drag handle — visible on tablet, tap/drag to close -->
+    <div id="queue-drag-handle" style="display:none;justify-content:center;align-items:center;padding:8px 0 4px;cursor:pointer;flex-shrink:0;" onclick="toggleQueue()">
+      <div style="width:36px;height:4px;border-radius:2px;background:var(--border2);"></div>
+    </div>
     <!-- Collapsed strip — click to open -->
     <div class="queue-strip" onclick="toggleQueue()" style="cursor:pointer;" title="Open unscheduled jobs">
       <i class="ti ti-briefcase" style="font-size:14px;color:var(--text3)"></i>
@@ -596,6 +674,9 @@ let queueOpen=false;
 function toggleQueue(){
   queueOpen=!queueOpen;
   document.getElementById('queue-panel').className='queue-panel '+(queueOpen?'open':'closed');
+  if(getDevice()==='tablet'){
+    document.body.style.setProperty('--tablet-queue-h', queueOpen?'180px':'44px');
+  }
   if(queueOpen)buildQueue();
 }
 function buildQueue(){
@@ -615,14 +696,19 @@ function buildQueue(){
     card.addEventListener('dblclick',()=>openAddModal(u.id));
     queue.appendChild(card);
   });
-  // Queue drop zone (drag back to unscheduled)
-  queue.addEventListener('dragover',e=>{e.preventDefault();queue.classList.add('drag-over');});
-  queue.addEventListener('dragleave',()=>queue.classList.remove('drag-over'));
-  queue.addEventListener('drop',e=>{
-    e.preventDefault();queue.classList.remove('drag-over');
-    if(!dragCard||!dragCard.dataset.id)return;
-    unscheduleJob(dragCard.dataset.id);dragCard=null;
-  });
+  // Queue drop zone — set up once on the panel itself (works open or closed)
+  const panel=document.getElementById('queue-panel');
+  if(!panel._dropSetup){
+    panel._dropSetup=true;
+    panel.addEventListener('dragover',e=>{e.preventDefault();panel.classList.add('drag-over');});
+    panel.addEventListener('dragleave',e=>{if(!panel.contains(e.relatedTarget))panel.classList.remove('drag-over');});
+    panel.addEventListener('drop',e=>{
+      e.preventDefault();panel.classList.remove('drag-over');
+      if(!dragCard||!dragCard.dataset.id)return;
+      if(dragCard.dataset.placed)unscheduleJob(dragCard.dataset.id);
+      dragCard=null;
+    });
+  }
 }
 
 function clickCalBtn(){if(currentView==='month')setView('week');else setView('month');}
@@ -701,31 +787,54 @@ function _appendMonth(scroll,year,month,slotMap,renderedWeeks){
       const dd=document.createElement('div');dd.className='mv-date'+(sameDay(d,today())?' today-dot':'');
       dd.textContent=d.getDate();
       cell.appendChild(dd);
-      // Drop zone — accepts unscheduled jobs AND placed tiles being moved
-      cell.addEventListener('dragover',e=>{e.preventDefault();cell.style.background='#eff6ff';});
-      cell.addEventListener('dragleave',()=>cell.style.background='');
-      cell.addEventListener('drop',e=>{
-        e.preventDefault();cell.style.background='';
-        if(!dragCard)return;
-        const dropDate=new Date(d);
-        const jid=dragCard.dataset.id;
-        if(dragCard.dataset.placed){
-          // Move placed job to new date
-          jobs[jid].startDate=dropDate;
-          jobs[jid].placedAt=Date.now();
-        } else {
-          // Place unscheduled job
-          const trimTypes=['remodel_trim','nc_trim'];
-          const cl=trimTypes.includes(dragCard.dataset.type)
-            ?[{ok:null,t:'All fixtures on site'},{ok:null,t:'Hardware unopened'},{ok:null,t:'Confirm access'}]
-            :[{ok:null,t:'Confirm with customer'},{ok:null,t:'Materials ready'}];
-          Object.assign(jobs[jid],{startDate:dropDate,placedAt:Date.now(),status:'confirmed'});
-          unscheduled=unscheduled.filter(u=>u.id!==jid);
-        }
-        dragCard=null;
-        rebuildAll();buildQueue();
-      });
       rowEl.appendChild(cell);
+    });
+    // Single row-level drop handler — calculates target cell from mouse X position
+    rowEl.addEventListener('dragover',e=>{
+      e.preventDefault();
+      const rect=rowEl.getBoundingClientRect();
+      const ci=Math.floor((e.clientX-rect.left)/(rect.width/7));
+      const cells=rowEl.querySelectorAll('.mv-day-cell');
+      cells.forEach((c,i)=>c.style.background=i===ci?'#eff6ff':'');
+    });
+    rowEl.addEventListener('dragleave',e=>{
+      if(!rowEl.contains(e.relatedTarget)){
+        rowEl.querySelectorAll('.mv-day-cell').forEach(c=>c.style.background='');
+      }
+    });
+    rowEl.addEventListener('drop',e=>{
+      e.preventDefault();
+      rowEl.querySelectorAll('.mv-day-cell').forEach(c=>c.style.background='');
+      // Get job ID from dataTransfer (reliable) or dragCard fallback
+      const jid=e.dataTransfer.getData('text/plain')||(dragCard&&dragCard.dataset.id);
+      if(!jid)return;
+      const rect=rowEl.getBoundingClientRect();
+      const ci=Math.max(0,Math.min(6,Math.floor((e.clientX-rect.left)/(rect.width/7))));
+      const d=rowDates[ci];
+      const dropDate=new Date(d);
+      if(jobs[jid]&&jobs[jid].startDate){
+        // Already scheduled — move to new date
+        jobs[jid].startDate=dropDate;
+        jobs[jid].placedAt=Date.now();
+      } else if(jobs[jid]){
+        // Unscheduled job — place it
+        const trimTypes=['remodel_trim','nc_trim'];
+        const cl=trimTypes.includes(jobs[jid].typeKey)
+          ?[{ok:null,t:'All fixtures on site'},{ok:null,t:'Hardware unopened'},{ok:null,t:'Confirm access'}]
+          :[{ok:null,t:'Confirm with customer'},{ok:null,t:'Materials ready'}];
+        Object.assign(jobs[jid],{startDate:dropDate,placedAt:Date.now(),status:'confirmed'});
+        unscheduled=unscheduled.filter(u=>u.id!==jid);
+      } else if(dragCard){
+        // New job from queue card (not yet in jobs)
+        const trimTypes=['remodel_trim','nc_trim'];
+        const cl=trimTypes.includes(dragCard.dataset.type)
+          ?[{ok:null,t:'All fixtures on site'},{ok:null,t:'Hardware unopened'},{ok:null,t:'Confirm access'}]
+          :[{ok:null,t:'Confirm with customer'},{ok:null,t:'Materials ready'}];
+        jobs[jid]={name:dragCard.dataset.label,typeKey:dragCard.dataset.type,status:'confirmed',workDays:1,startDate:dropDate,placedAt:Date.now(),cust:dragCard.dataset.cust,customer:dragCard.dataset.label,phone:'—',addr:'',checklist:cl,notes:''};
+        unscheduled=unscheduled.filter(u=>u.id!==jid);
+      }
+      dragCard=null;
+      rebuildAll();buildQueue();
     });
     renderMonthSpanTiles(rowEl,rowDates,slotMap,year,month);
     scroll.appendChild(rowEl);
@@ -795,23 +904,82 @@ function renderMonthSpanTiles(rowEl,rowDates,slotMap,renderYear,renderMonth){
     tile.style.height=MV_TILE_H+'px';
 
     if(!contL){
-      tile.innerHTML=`<i class="ti ${jt.icon}" style="font-size:10px;flex-shrink:0;color:${jt.color}"></i><span style="overflow:hidden;text-overflow:ellipsis;flex:1">${job.name}</span>`;
+      tile.innerHTML=`<i class="ti ${jt.icon}" style="font-size:10px;flex-shrink:0;color:${jt.color}"></i><span style="overflow:hidden;text-overflow:ellipsis;flex:1">${job.name}</span><span class="tile-resize-r" style="width:8px;cursor:ew-resize;flex-shrink:0;opacity:.4;display:flex;align-items:center;justify-content:center;font-size:8px">⣿</span>`;
+      // Attach resize handler separately to avoid stopPropagation blocking drag
+      const handle=tile.querySelector('.tile-resize-r');
+      handle.addEventListener('mousedown',e=>{
+        e.preventDefault(); // prevent text selection
+        // Don't stopPropagation — let drag events pass through if needed
+        startResize(e,id,'right');
+      });
     } else {
       tile.innerHTML=`<span style="overflow:hidden;text-overflow:ellipsis;flex:1;padding-left:4px;opacity:.6">${job.name}</span>`;
     }
 
-    tile.addEventListener('click',()=>openSB(id,'month'));
-    tile.draggable=true;
+    tile.addEventListener('click',e=>{if(tileDragMoved)return;openSB(id,'month');});
     tile.dataset.id=id;
     tile.dataset.placed='1';
-    tile.addEventListener('dragstart',e=>{
-      dragCard=tile;tile.style.opacity='.4';
-      document.body.classList.add('dragging-job');
-      e.dataTransfer.effectAllowed='move';
-    });
-    tile.addEventListener('dragend',()=>{
-      tile.style.opacity='';
-      document.body.classList.remove('dragging-job');
+    tile.addEventListener('mousedown',e=>{
+      if(e.button!==0)return;
+      if(e.target.classList.contains('tile-resize-r'))return;
+      e.preventDefault();
+      let dragStarted=false;
+      let holdTimer=null;
+
+      function beginDrag(){
+        if(dragStarted)return;
+        dragStarted=true;
+        clearTimeout(holdTimer);
+        document.removeEventListener('mousemove',onPreMove);
+        document.removeEventListener('mouseup',onPreUp);
+        tileDragging=true;
+        tileDragId=id;
+        tileDragMoved=false;
+        const rect=tile.getBoundingClientRect();
+        tileDragGhost=tile.cloneNode(true);
+        tileDragGhost.style.cssText=`position:fixed;pointer-events:none;opacity:.7;z-index:9999;width:${rect.width}px;height:${rect.height}px;left:${e.clientX-rect.width/2}px;top:${e.clientY-10}px;`;
+        document.body.appendChild(tileDragGhost);
+        tile.style.opacity='.3';
+        document.body.classList.add('dragging-job');
+        document.addEventListener('mousemove',onDragMove);
+        document.addEventListener('mouseup',onDragUp);
+      }
+
+      function onPreMove(ev){
+        const dx=ev.clientX-e.clientX,dy=ev.clientY-e.clientY;
+        if(Math.sqrt(dx*dx+dy*dy)>5)beginDrag();
+      }
+
+      function onPreUp(){
+        clearTimeout(holdTimer);
+        document.removeEventListener('mousemove',onPreMove);
+        document.removeEventListener('mouseup',onPreUp);
+        tileDragMoved=false;
+      }
+
+      function onDragMove(ev){
+        if(!dragStarted)return;
+        tileDragGhost.style.left=(ev.clientX-parseInt(tileDragGhost.style.width)/2)+'px';
+        tileDragGhost.style.top=(ev.clientY-10)+'px';
+        highlightDropTarget(ev.clientX,ev.clientY);
+        tileDragMoved=true;
+      }
+
+      function onDragUp(ev){
+        if(!dragStarted)return;
+        document.removeEventListener('mousemove',onDragMove);
+        document.removeEventListener('mouseup',onDragUp);
+        clearDropHighlights();
+        if(tileDragGhost){tileDragGhost.remove();tileDragGhost=null;}
+        tile.style.opacity='';
+        document.body.classList.remove('dragging-job');
+        dropTileAt(ev.clientX,ev.clientY,id);
+        setTimeout(()=>{tileDragging=false;tileDragId=null;tileDragMoved=false;},50);
+      }
+
+      holdTimer=setTimeout(beginDrag,500);
+      document.addEventListener('mousemove',onPreMove);
+      document.addEventListener('mouseup',onPreUp);
     });
     layer.appendChild(tile);
   });
@@ -853,7 +1021,21 @@ function buildWeekView(){
   const grid=document.getElementById('wv-grid');grid.innerHTML='';
   // Build 7 columns
   const cols=wdays.map(d=>{
-    const cell=document.createElement('div');cell.className='wv-day-cell'+(isWeekend(d)?' wknd':'');return cell;
+    const cell=document.createElement('div');
+    cell.className='wv-day-cell'+(isWeekend(d)?' wknd':'');
+    // Inline day header — shown on phone, hidden on desktop via CSS
+    const dh=document.createElement('div');
+    dh.className='wv-mobile-dh';
+    dh.style.cssText='display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);';
+    const nameEl=document.createElement('span');
+    nameEl.style.cssText='font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;width:28px;';
+    nameEl.textContent=DOW[d.getDay()];
+    const numEl=document.createElement('span');
+    numEl.style.cssText=`font-size:18px;font-weight:600;color:${sameDay(d,today())?'var(--blue)':'var(--text)'};`;
+    numEl.textContent=d.getDate();
+    dh.appendChild(nameEl);dh.appendChild(numEl);
+    cell.appendChild(dh);
+    return cell;
   });
   // Place jobs into columns — each job appears on its start day as a full card, continuation days get a slim banner
   Object.entries(jobs).forEach(([id,job])=>{
@@ -905,12 +1087,23 @@ function buildWeekView(){
     });
   });
   cols.forEach(c=>grid.appendChild(c));
+  // On phone: collapse days with no jobs to just the header row
+  if(getDevice()==='phone'){
+    cols.forEach(col=>{
+      const hasJobs=col.querySelector('.wv-job-card,.wv-cont-banner');
+      if(!hasJobs){
+        col.style.minHeight='0';
+        const dh=col.querySelector('.wv-mobile-dh');
+        if(dh)dh.style.opacity='.5';
+      }
+    });
+  }
 }
 
 // ── RESIZE ──
 let resizeState=null;
 function startResize(e,jobId,side){
-  e.preventDefault();e.stopPropagation();
+  e.preventDefault();
   resizeState={jobId,side,startX:e.clientX,origWorkDays:jobs[jobId].workDays,origStart:new Date(jobs[jobId].startDate),lastDelta:0};
   document.body.style.cursor='ew-resize';
   document.body.style.userSelect='none';
@@ -920,8 +1113,9 @@ function startResize(e,jobId,side){
 function onResizeMove(e){
   if(!resizeState)return;
   const{jobId,side,startX,origWorkDays,origStart}=resizeState;
-  const rows=document.querySelectorAll('.sw-week-row');
-  const row=rows[0];if(!row)return;
+  // Get column width from whichever row type is visible
+  const row=document.querySelector('.mv-week-row')||document.querySelector('.sw-week-row');
+  if(!row)return;
   const colW=row.getBoundingClientRect().width/7;
   const deltaCols=Math.round((e.clientX-startX)/colW);
   if(deltaCols===resizeState.lastDelta)return;
@@ -929,11 +1123,10 @@ function onResizeMove(e){
   if(side==='right'){
     jobs[jobId].workDays=Math.max(1,origWorkDays+deltaCols);
   } else {
-    // Move start: shift start date by deltaCols calendar days, keep work days same
     const newStart=addDays(origStart,deltaCols);
     jobs[jobId].startDate=newStart;
   }
-  buildQueue(); // rebuild on each meaningful delta change
+  rebuildAll();
 }
 function onResizeUp(){
   if(!resizeState)return;
@@ -979,8 +1172,20 @@ function markAllLinkedComplete(id){
 }
 
 // ── SIDEBAR ──
+function openMobileJob(id,view){
+  openSidebarId=id;openSidebarView=view;
+  document.getElementById('mobile-job-title').textContent=jobs[id].name;
+  renderSBBody(id,'mobile-job-body',view,false);
+  document.getElementById('mobile-job-overlay').style.display='flex';
+  document.getElementById('mobile-fab').classList.add('fab-hidden');
+}
+function closeMobileJob(){
+  document.getElementById('mobile-job-overlay').style.display='none';
+  openSidebarId=null;openSidebarView=null;
+  if(getDevice()==='phone')document.getElementById('mobile-fab').classList.remove('fab-hidden');;
+}
 function openSB(id,view){
-  // Always use month sidebar when not in week view
+  if(getDevice()==='phone'){openMobileJob(id,view);return;}
   const v=currentView==='week'?'week':'month';
   openSidebarId=id;openSidebarView=v;
   document.getElementById('month-sb').style.display=v==='month'?'flex':'none';
@@ -989,18 +1194,33 @@ function openSB(id,view){
   renderSBBody(id,v==='month'?'msb-body':'wsb-body',v,false);
 }
 function openSBWithFollowup(id,view){
+  if(getDevice()==='phone'){
+    openSidebarId=id;openSidebarView=view;
+    document.getElementById('mobile-job-title').textContent=jobs[id].name;
+    renderSBBody(id,'mobile-job-body',view,true);
+    document.getElementById('mobile-job-overlay').style.display='flex';
+    document.getElementById('mobile-fab').classList.add('fab-hidden');
+    return;
+  }
   const v=currentView==='week'?'week':'month';
   openSidebarId=id;openSidebarView=v;
-  // Hide all sidebars first, then show correct one
   ['month-sb','week-sb'].forEach(s=>document.getElementById(s).style.display='none');
   const sbEl=document.getElementById(v==='month'?'month-sb':'week-sb');
   sbEl.style.display='flex';
   document.getElementById(v==='month'?'msb-title':'wsb-title').textContent=jobs[id].name;
   renderSBBody(id,v==='month'?'msb-body':'wsb-body',v,true);
 }
-function closeSB(id){document.getElementById(id).style.display='none';openSidebarId=null;openSidebarView=null;}
+function closeSB(id){
+  if(getDevice()==='phone'){closeMobileJob();return;}
+  document.getElementById(id).style.display='none';openSidebarId=null;openSidebarView=null;
+}
 function refreshSB(){
   if(!openSidebarId||!openSidebarView)return;
+  if(getDevice()==='phone'){
+    document.getElementById('mobile-job-title').textContent=jobs[openSidebarId].name;
+    renderSBBody(openSidebarId,'mobile-job-body',openSidebarView,false);
+    return;
+  }
   const v=openSidebarView;
   document.getElementById(v==='month'?'msb-title':'wsb-title').textContent=jobs[openSidebarId].name;
   renderSBBody(openSidebarId,v==='month'?'msb-body':'wsb-body',v,false);
@@ -1061,10 +1281,14 @@ function renderSBBody(id,bodyId,view,showFollowupPrompt){
   if(job.status==='complete'){
     actions+=`<div class="arow"><button class="ab qbo" onclick="sendQBO('${id}')"><i class="ti ti-file-invoice" style="font-size:11px"></i>Send to QuickBooks</button></div>`;
     actions+=`<div class="arow"><button class="ab" onclick="markBilled('${id}')" style="font-size:10px;color:var(--text3)"><i class="ti ti-circle-check" style="font-size:11px"></i>Mark as billed</button></div>`;
-    actions+=`<div class="arow"><button class="ab" onclick="openSBWithFollowup('${id}','${view}')"><i class="ti ti-rotate-clockwise" style="font-size:11px"></i>Add follow-up visit</button></div>`;
+    actions+=`<div class="arow"><button class="ab" onclick="openSBWithFollowup('${id}','${view}')" style="font-size:10px;color:var(--text3)"><i class="ti ti-rotate-clockwise" style="font-size:11px"></i>Add follow-up visit</button></div>`;
+    actions+=`<div class="arow"><button class="ab" onclick="markIncomplete('${id}')" style="font-size:10px;color:var(--text3)"><i class="ti ti-arrow-back-up" style="font-size:11px"></i>Mark as incomplete</button></div>`;
   }
   if(job.status==='followup')actions+=`<div class="arow"><button class="ab qbo" onclick="sendQBO('${id}')"><i class="ti ti-file-invoice" style="font-size:11px"></i>Send to QuickBooks</button></div>`;
-  if(job.status==='invoiced')actions+=`<div class="qbo-note"><i class="ti ti-circle-check" style="font-size:14px;flex-shrink:0;margin-top:1px"></i><span>Draft invoice created in QuickBooks Online. Voltboard will update automatically when sent.</span></div>`;
+  if(job.status==='invoiced'){
+    if(job.qboSent)actions+=`<div class="qbo-note"><i class="ti ti-circle-check" style="font-size:14px;flex-shrink:0;margin-top:1px"></i><span>Draft invoice created in QuickBooks Online. Voltboard will update automatically when sent.</span></div>`;
+    actions+=`<div class="arow"><button class="ab" onclick="markIncomplete('${id}')" style="font-size:10px;color:var(--text3)"><i class="ti ti-arrow-back-up" style="font-size:11px"></i>Mark as incomplete</button></div>`;
+  }
   actions+=`<div class="arow"><button class="ab" onclick="openAddModal('${id}')"><i class="ti ti-edit" style="font-size:11px"></i>Edit</button><button class="ab danger" onclick="deleteJob('${id}','${view}')"><i class="ti ti-trash" style="font-size:11px"></i>Delete</button></div>`;
 
   const addrHtml=job.addr?`<div class="sdv addr"><i class="ti ti-map-pin" style="font-size:11px;margin-right:3px"></i>${job.addr}</div>`:'';
@@ -1119,7 +1343,7 @@ function renderSBBody(id,bodyId,view,showFollowupPrompt){
       <div><span class="sbadge ${displayStatus(id)}">${STATUS_LABELS[job.status]}</span><div style="font-size:10px;color:var(--text3);margin-top:2px">${ct.label}</div></div>
     </div>
     ${statusSel}${followupPrompt}
-    <div><div class="sdl">Customer</div><div class="sdv">${job.customer}</div><div class="sdv phone">${job.phone}</div>${addrHtml}</div>
+    <div><div class="sdl">Contact</div><div class="sdv phone">${job.phone}</div>${addrHtml}</div>
     <div>
       <div class="sdl">Scheduled</div>
       <div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap">
@@ -1168,8 +1392,9 @@ function dismissFollowup(id,view){
   renderSBBody(id,bodyId,v,false);
   rebuildAll();
 }
-function sendQBO(id){jobs[id].status='invoiced';const inv=jobs[id].checklist.find(c=>c.t.toLowerCase().includes('invoice'));if(inv)inv.ok=true;rebuildAll();refreshSB();}
-function markBilled(id){jobs[id].status='invoiced';rebuildAll();refreshSB();}
+function sendQBO(id){jobs[id].status='invoiced';jobs[id].qboSent=true;const inv=jobs[id].checklist.find(c=>c.t.toLowerCase().includes('invoice'));if(inv)inv.ok=true;rebuildAll();refreshSB();}
+function markBilled(id){jobs[id].status='invoiced';jobs[id].qboSent=false;rebuildAll();refreshSB();}
+function markIncomplete(id){jobs[id].status='confirmed';jobs[id].qboSent=false;rebuildAll();refreshSB();}
 function unscheduleJob(id){
   if(!jobs[id])return;
   const job=jobs[id];
@@ -1343,7 +1568,151 @@ function addCustType(){const inp=document.getElementById('new-cust-type');const 
 function deleteJobType(id){if(jobTypes.length<=1){alert('Need at least one job type.');return;}jobTypes=jobTypes.filter(t=>t.id!==id);renderSettings();populateSelects();}
 function deleteCustType(id){if(custTypes.length<=1){alert('Need at least one customer type.');return;}custTypes=custTypes.filter(t=>t.id!==id);renderSettings();populateSelects();}
 
-// ── SERVICE WORKER ──
+// Make entire document a valid drop target so dragover fires on all elements
+document.addEventListener('dragover',e=>e.preventDefault());
+document.addEventListener('drop',e=>e.preventDefault());
+
+// ── MOUSE-BASED TILE DRAG (bypasses scroll container restrictions) ──
+let tileDragging=false;
+let tileDragGhost=null;
+let tileDragId=null;
+let tileDragMoved=false;
+
+function startTileDrag(e,id,tile,rowEl,rowDates){
+  tileDragging=true;
+  tileDragId=id;
+  tileDragMoved=false;
+  tileDragGhost=tile.cloneNode(true);
+  tileDragGhost.style.position='fixed';
+  tileDragGhost.style.pointerEvents='none';
+  tileDragGhost.style.opacity='.7';
+  tileDragGhost.style.zIndex='9999';
+  tileDragGhost.style.width=tile.getBoundingClientRect().width+'px';
+  tileDragGhost.style.height=tile.getBoundingClientRect().height+'px';
+  tileDragGhost.style.left=(e.clientX-parseInt(tileDragGhost.style.width)/2)+'px';
+  tileDragGhost.style.top=(e.clientY-10)+'px';
+  document.body.appendChild(tileDragGhost);
+  tile.style.opacity='.3';
+  document.body.classList.add('dragging-job');
+
+  function onMove(ev){
+    tileDragGhost.style.left=(ev.clientX-parseInt(tileDragGhost.style.width)/2)+'px';
+    tileDragGhost.style.top=(ev.clientY-10)+'px';
+    highlightDropTarget(ev.clientX,ev.clientY);
+    tileDragMoved=true;
+  }
+
+  function onUp(ev){
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+    clearDropHighlights();
+    tileDragGhost.remove();tileDragGhost=null;
+    tile.style.opacity='';
+    document.body.classList.remove('dragging-job');
+    dropTileAt(ev.clientX,ev.clientY,id);
+    setTimeout(()=>{tileDragging=false;tileDragId=null;},50);
+  }
+
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
+}
+
+function highlightDropTarget(x,y){
+  clearDropHighlights();
+  const rows=document.querySelectorAll('.mv-week-row');
+  for(const row of rows){
+    const rect=row.getBoundingClientRect();
+    if(y>=rect.top&&y<=rect.bottom){
+      const ci=Math.max(0,Math.min(6,Math.floor((x-rect.left)/(rect.width/7))));
+      const cells=row.querySelectorAll('.mv-day-cell');
+      if(cells[ci])cells[ci].style.background='#eff6ff';
+      // Check queue panel
+      break;
+    }
+  }
+  // Highlight queue panel if hovering over it
+  const qp=document.getElementById('queue-panel');
+  if(qp){
+    const qr=qp.getBoundingClientRect();
+    if(x>=qr.left&&x<=qr.right&&y>=qr.top&&y<=qr.bottom){
+      qp.classList.add('drag-over');
+    }
+  }
+}
+
+function clearDropHighlights(){
+  document.querySelectorAll('.mv-day-cell').forEach(c=>c.style.background='');
+  document.getElementById('queue-panel')?.classList.remove('drag-over');
+}
+
+function dropTileAt(x,y,id){
+  // Check if dropped on queue panel
+  const qp=document.getElementById('queue-panel');
+  if(qp){
+    const qr=qp.getBoundingClientRect();
+    if(x>=qr.left&&x<=qr.right&&y>=qr.top&&y<=qr.bottom){
+      unscheduleJob(id);return;
+    }
+  }
+  // Find which row and column
+  const rows=document.querySelectorAll('.mv-week-row');
+  for(const row of rows){
+    const rect=row.getBoundingClientRect();
+    if(y>=rect.top&&y<=rect.bottom){
+      const ci=Math.max(0,Math.min(6,Math.floor((x-rect.left)/(rect.width/7))));
+      const cells=row.querySelectorAll('.mv-day-cell');
+      const cell=cells[ci];
+      if(!cell)break;
+      const ds=cell.dataset.date;
+      if(!ds)break;
+      const[cy,cm,cd]=ds.split('-').map(Number);
+      const dropDate=new Date(cy,cm-1,cd);
+      jobs[id].startDate=dropDate;
+      jobs[id].placedAt=Date.now();
+      rebuildAll();buildQueue();
+      return;
+    }
+  }
+}
+// ── TABLET QUEUE DRAG TO CLOSE ──
+(function(){
+  let qTouchStartY=0,qTouchStartOpen=false;
+  const panel=document.getElementById('queue-panel');
+  if(!panel)return;
+  panel.addEventListener('touchstart',e=>{
+    if(getDevice()!=='tablet')return;
+    qTouchStartY=e.touches[0].clientY;
+    qTouchStartOpen=queueOpen;
+  },{passive:true});
+  panel.addEventListener('touchend',e=>{
+    if(getDevice()!=='tablet')return;
+    const dy=e.changedTouches[0].clientY-qTouchStartY;
+    // Drag down >40px while open = close
+    if(qTouchStartOpen&&dy>40){
+      if(queueOpen)toggleQueue();
+    }
+    // Drag up >40px while closed = open
+    if(!qTouchStartOpen&&dy<-40){
+      if(!queueOpen)toggleQueue();
+    }
+  },{passive:true});
+})();
+(function(){
+  let touchStartX=0,touchStartY=0;
+  document.addEventListener('touchstart',e=>{
+    touchStartX=e.touches[0].clientX;
+    touchStartY=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    if(currentView!=='week'||getDevice()!=='phone')return;
+    if(document.getElementById('mobile-job-overlay').style.display==='flex')return;
+    const dx=e.changedTouches[0].clientX-touchStartX;
+    const dy=e.changedTouches[0].clientY-touchStartY;
+    if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5)return;
+    shiftPeriod(dx<0?1:-1);
+  },{passive:true});
+})();
+
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('sw.js').catch(()=>{});
@@ -1354,8 +1723,12 @@ if('serviceWorker' in navigator){
 function getDevice(){
   const w=window.innerWidth;
   const ua=navigator.userAgent;
+  const isTouch=navigator.maxTouchPoints>1;
+  const isRetina=window.devicePixelRatio>=2;
   if(w<=500||(/iPhone|Android.*Mobile/i.test(ua)))return'phone';
-  if(w<=820||/iPad/i.test(ua)||(navigator.maxTouchPoints>1&&/Mac/i.test(ua)))return'tablet';
+  // iPad Pro reports as Mac but has touch + retina + width <= 1366
+  if(isTouch&&isRetina&&w<=1366)return'tablet';
+  if(/iPad/i.test(ua))return'tablet';
   return'desktop';
 }
 
@@ -1450,7 +1823,15 @@ async function sbLoad(){
 // ── INIT ──
 updateRange();
 const device=getDevice();
+if(device==='tablet'){
+  document.body.classList.add('tablet');
+  queueOpen=true;
+  document.getElementById('queue-panel').className='queue-panel open';
+  document.body.style.setProperty('--tablet-queue-h','180px');
+  document.getElementById('queue-drag-handle').style.display='flex';
+}
 if(device==='phone'){
+  document.body.classList.add('phone');
   currentView='week';
   document.getElementById('month-view').style.display='none';
   document.getElementById('week-view').style.display='flex';
@@ -1470,3 +1851,4 @@ if(device==='phone'){
 </script>
 </body>
 </html>
+<!-- debug probe removed -->
