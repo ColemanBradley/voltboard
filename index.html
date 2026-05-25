@@ -1286,7 +1286,7 @@ function renderSBBody(id,bodyId,view,showFollowupPrompt){
   }
   if(job.status==='followup')actions+=`<div class="arow"><button class="ab qbo" onclick="sendQBO('${id}')"><i class="ti ti-file-invoice" style="font-size:11px"></i>Send to QuickBooks</button></div>`;
   if(job.status==='invoiced'){
-    if(job.qboSent)actions+=`<div class="qbo-note"><i class="ti ti-circle-check" style="font-size:14px;flex-shrink:0;margin-top:1px"></i><span>Draft invoice created in QuickBooks Online. Voltboard will update automatically when sent.</span></div>`;
+    if(job.qboSent)actions+=`<div class="qbo-note"><i class="ti ti-clipboard-check" style="font-size:14px;flex-shrink:0;margin-top:1px"></i><span>Job description copied to clipboard. QuickBooks opened — paste into the invoice memo field.</span></div>`;
     actions+=`<div class="arow"><button class="ab" onclick="markIncomplete('${id}')" style="font-size:10px;color:var(--text3)"><i class="ti ti-arrow-back-up" style="font-size:11px"></i>Mark as incomplete</button></div>`;
   }
   actions+=`<div class="arow"><button class="ab" onclick="openAddModal('${id}')"><i class="ti ti-edit" style="font-size:11px"></i>Edit</button><button class="ab danger" onclick="deleteJob('${id}','${view}')"><i class="ti ti-trash" style="font-size:11px"></i>Delete</button></div>`;
@@ -1392,7 +1392,19 @@ function dismissFollowup(id,view){
   renderSBBody(id,bodyId,v,false);
   rebuildAll();
 }
-function sendQBO(id){jobs[id].status='invoiced';jobs[id].qboSent=true;const inv=jobs[id].checklist.find(c=>c.t.toLowerCase().includes('invoice'));if(inv)inv.ok=true;rebuildAll();refreshSB();}
+function sendQBO(id){
+  jobs[id].status='invoiced';jobs[id].qboSent=true;
+  const inv=jobs[id].checklist.find(c=>c.t.toLowerCase().includes('invoice'));
+  if(inv)inv.ok=true;
+  // Copy job description to clipboard
+  const notes=jobs[id].notes||'';
+  if(notes){
+    navigator.clipboard.writeText(notes).catch(()=>{});
+  }
+  // Open QBO new invoice page
+  window.open('https://app.qbo.intuit.com/app/invoice','_blank');
+  rebuildAll();refreshSB();
+}
 function markBilled(id){jobs[id].status='invoiced';jobs[id].qboSent=false;rebuildAll();refreshSB();}
 function markIncomplete(id){jobs[id].status='confirmed';jobs[id].qboSent=false;rebuildAll();refreshSB();}
 function unscheduleJob(id){
